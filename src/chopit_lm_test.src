@@ -8,39 +8,19 @@ proc (1) = CHOPITS_LM(dset_V, dset, struct chopitControl cCtl);
     local y_star_OP, y_star_HOPIT;
     local OLS_B, OP_B, me_OP, me_OPse, V_OP, L_OP, IC_OP,
         HOPIT_B, me_HOPIT, me_HOPITse, V_HOPIT, L_HOPIT, IC_HOPIT;
-    local	d_ij, phat, nam, m, stb, vc_ols, std, sig, cx, rsq, resid, dbw;
+    local	d_ij, phat;
     local startmu1, startmu, startrep, mu_temp, beta_Y, c, op_mu, retOPb, t_OP, et_OP, beta_struct, OPbse, zbetahat, mu_mat, mu_xbeta, p_ij;
     local pordp, check, me_model, pOPxbar, pOP_se, V_cons, sig_V_inv, gama, K_HOPIT, retHOPIT, et_HOPIT, HOPIT_se, t_HOPIT;
-    local zgama, mu_ij, xbeta, p_HOPIT, p_HOPIT_xbar, p_HOPITse, y_inf, sel, beta_inf, beta_inf_struct, retMIOP, et_MIOP;
-    local mu_MIOP, MIOP_se, t_MIOP, xb_inf, xb_inf_struct, xb_struct, p_MIOP, p_MIOP_prior, p_no_inf, p_no_inf_prior, V_GOP_V2;
-    local p_aug0, p_aug1, p0_MIOP, p_inf_MIOP, pLC2_0, pLC2_1, p_inf_prior, L0, L1, L, LC_predict, pPOST_MIOP, p_MIOP_xbar, p_MIOPse;
-    local m_i, lnLiHOPIT, GOP_1_se;
-    local TOP_B, me_TOP, me_TOPse, V_TOP, L_TOP, IC_TOP, beta_struct_TOP, mu_TOP, tempered1_b, tempered2_b;
-    local IC_ALL, IC_HOPITS;
-//    local p0_MIOP_HOP, p_inf_MIOP_HOP, pPOST_MIOP_HOP, me_MIOP_HOP, me_MIOP_HOPse, p_MIOP_HOP_xbar, p_MIOP_HOPse, IC_MIOP_HOP;
-    local TOP_HOP_B, me_TOP_HOP, me_TOP_HOPse, V_TOP_HOP, L_TOP_HOP, IC_TOP_HOP, p_TOP_HOP, p_TOP_HOP_prior;
-    local retTOP_HOP, et_TOP_HOP, TOP_HOP_se, t_TOP_HOP, p_TOP_HOP_xbar, p_TOP_HOPse;
-    local gama_temp, gama0, alpha0_free, beta0_free, delta0_free, k_GOP, L_GOP, V_sig;
-    local gama1_free, delta1_free, gama2_free, delta2_free, gama3_free, delta3_free, gama4_free, delta4_free, theta0_free, theta1_free, theta2_free, V_sigma;
-    local psy_start, R_gama;
-    local beta_V1, gama0_V1, gama_V1, beta_V2, gama0_V2, gama_V2, beta_V3, gama0_V3, gama_V3, k_V_GOP, L_V_GOP;
-    local gama0_HOP, gama_HOP, beta_HOP, LR_test, df, LR_p;
-    local gama0_MIOP, gama_MIOP, gama0_TOP, gama_TOP, k_TOP_HOP, se_gama;
-    local L_GOP_V1, L_GOP_V2, L_GOP_V3, L_un, no_param_un, df_beta, df_gama0, df_gama, V_GOP, GOP_se, params;
-    local lnL_SAH, lnL_V1, beta_LR, gama_LR, mu_ijV, mu_xbetaV1, p_ijV1, lnLiV1;
-    local R, R_b_primary, R_gamma_plus, R_gamma_minus, q, free_params, Wald, params_V1, R_b_vignettes, V_all, V_GOP_V1;
-    local V_q, Wald_p, Wald_test, k_GOP_JOINT, V_GOP_JOINT, GOP_JOINT_se, L_GOP_JOINT, df_beta0, df_V_beta, R_beta0;
-    local count_hop, count_gop, score, LM_test, grad_beta, grad_g1, grad_g2, grad_g3, grad_g4;
-    local xbeta_V1, mu_xbeta_V1, p_ij_V1, grad_beta_V1, grad_g1_V1, grad_g2_V1, grad_g3_V1, grad_g4_V1, Score_anal, bhhh_anal;
-    local params_V2, grad_beta_V2, grad_g1_V2, grad_g2_V2, grad_g3_V2, grad_g4_V2, xbeta_V2, mu_xbeta_V2, p_ij_V2, R_1V, R_2V, bhhh_max;
-    local beta_check, xbeta_V3, mu_xbeta_V3, p_ij_V3, grad_beta_V3, grad_g1_V3, grad_g2_V3, grad_g3_V3, grad_g4_V3;
+    local zgama, mu_ij, xbeta, p_HOPIT, p_HOPIT_xbar, p_HOPITse, lnLiHOPIT;
+    local IC_ALL, IC_HOPITS, gama0, beta_HOP, gama0_HOP, gama_HOP, LM_test, count_HOP, HOPIT_grad, LR_test, Wald_test, se_gama, gama_LR, beta_LR,
+    fail_linear, p_ij_V1, p_ijV1, mu_xbetaV1, beta_V1, beta_V2, beta_V3, gama_V1, gama_V2, gama_V3, mu_xbeta_V1, mu_xbeta_V2, mu_xbeta_V3, k_GOP_JOINT, df,
+    grad_beta, grad_g1, grad_g2, grad_g3, grad_g4, xbeta_V1, grad_beta_V1, grad_g1_V1, grad_g2_V1, grad_g3_V1, grad_g4_V1, Score_anal, bhhh_anal,
+    xbeta_V2, p_ij_V2, grad_beta_V2, grad_g1_V2, grad_g2_V2, grad_g3_V2, grad_g4_V2, bhhh_max;
+    local beta_check, xbeta_V3, p_ij_V3, grad_beta_V3, grad_g1_V3, grad_g2_V3, grad_g3_V3, grad_g4_V3;
     local Score_anal_RC, Score_anal_VE, df_RC, bhhh_anal_RC, df_VE, bhhh_anal_VE, V_RC, V_VE, LM_test_RC, LM_test_VE;
-    local mu_xbetaV2, p_ijV2, mu_xbetaV3, p_ijV3, fail_linear, chol_bhhh, chol_bhhh_RC, chol_bhhh_VE, V_inv, V_inv_RC, V_inv_VE;
-    local condition, cond_bhhh, cond_bhhh_VE, LM_cond, LM_cond_VE, HOPIT_grad, cond_bhhh_RC, LM_cond_RC;
-    local av_boundaries, V_gamma, G, p0, var_boundaries, se_boundaries, V_mu0, G0, V_gamma0;
-    local mu_ij_exp_new, mu_ij_linear, mu0_star, mu1_star, mu2_star, params_V3, grad_theta_V1, grad_theta_V2, grad_theta_V3, grad_theta;
-    local HOPIT_fail, retGOP_JOINT, GOP_JOINT_fail, ret_GOP, ret_GOP_V1, Hessian_joint, Hessian_joint_i, Hessian_VE, Hessian_RC;
-    local state, rand, LR_Yes_No;
+    local mu_xbetaV2, p_ijV2, mu_xbetaV3, p_ijV3, chol_bhhh, chol_bhhh_RC, chol_bhhh_VE, V_inv, V_inv_RC, V_inv_VE;
+    local condition, cond_bhhh, cond_bhhh_VE, LM_cond, LM_cond_VE, cond_bhhh_RC, LM_cond_RC, V_gamma;
+    local HOPIT_fail, LR_Yes_No, mu0_star, mu1_star, mu2_star, grad_theta_V1, grad_theta_V2, grad_theta_V3, grad_theta;
     
     clearg index0, index1;
 
