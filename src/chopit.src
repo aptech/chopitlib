@@ -1,0 +1,218 @@
+proc (0) = printChopit(struct chopitControl cCtl, struct chopitOut cOut, kv, phat);
+    
+    // Ceate output file
+    if cCtl.exp_mu == 1;
+        output file = "Perachi_J4_ammended_exp_V3.out" reset;
+    else;
+        output file = "Perachi_J4_linear_exp.out" reset;
+    endif;
+    
+    output on;
+    
+    format 15,4;
+    "               SELF-ASSESSED HEALTH (C)CHOPIT MODEL";
+    print;
+    "DATE IS";;
+    datestring(0);
+    print;
+    
+    if cCtl.exp_mu == 1;
+        "LINEAR THRESHOLDS FOR HOPIT VARIANTS";
+    else;
+        "EXPONENTIAL THRESHOLDS FOR HOPIT VARIANTS";
+    endif;
+    
+    "DESCRIPTIVE STATISTICS: SAH DATA";
+    dstatmt("Per_V1_DAT");
+    print;
+    
+    " No. of vignettes used";;
+    kv;
+    print;
+    
+    "Sample Proportions of Y";
+    print;
+    phat;
+    
+    if cCtl.exp_mu eq 1;
+        
+        "LM TEST FOR RC AND VE";
+        "Test, df's and p-value (reject null HOPIT model for large test values and/or small p-value)";
+      print;
+        cOut.LM_test[1,.];
+      print;
+        "LM TEST FOR VE";
+        "Test, df's and p-value (reject null HOPIT model for large test values and/or small p-value)";
+      print;
+        cOut.LM_test[2,.];
+      print;
+        "LM TEST FOR RC";
+        "Test, df's and p-value (reject null HOPIT model for large test values and/or small p-value)";
+      print;
+        cOut.LM_test[3,.];
+        
+    endif;
+    print;
+    "AVERAGE PROBABILITIES";
+    print;
+    
+    if cCtl.mtype eq 1;
+        meanc(cOut.pord_p);
+    elseif cCtl.mtype eq 2;
+        meanc(cOut.pord_p)~meanc(cOut.p_HOPIT);
+    endif;
+    
+    "SUMMARIES OF INFORMATION CRITERIA (BIC, AIC, CAIC, HQIC)";
+  print;
+    format 15,8;
+    "OP REGRESION";
+    miss(cOut.IC_OP,1000000);
+  print;
+    if cCtl.mtype ge 2;
+        "HOPIT";
+        miss(cOut.IC_HOPIT,1000000);
+      print;
+    endif;
+    
+  print;
+    if cCtl.mtype ge 2;
+        "No. of vignettes used";;
+        kv;
+      print;
+        "Vignette names";;
+        $V_vars;
+    endif;
+    
+    print;
+    print;
+    "		SIMPLE REGRESSION";
+    format 15,4;
+    
+    print;
+    "ESTIMATED PARAMETERS: COEFFICIENT S.E. T-STAT";
+    print;
+    
+    for i (1, kx_struct, 1);
+//        $reg_vars[i];;
+        cOut.OLS_B[i,.];
+    endfor;
+    print;
+    
+    let mu 		= mu;
+    mu			= mu .* ones(capJ-1,1);
+    
+//    OP_vars 	= reg_vars[2:rows(reg_vars)]|mu;
+    
+    print;
+    print;
+    "		SIMPLE ORDERED PROBIT REGRESSION";
+    format 15,6;
+    
+    print;
+    "ESTIMATED PARAMETERS: COEFFICIENT S.E. T-STAT";
+    print;
+    
+    for i (1,kx_struct-1+capJ-1,1);
+        $OP_vars[i];;
+        cOut.OP_B[i, .];
+    endfor;
+    print;
+    
+    print;
+    "ESTIMATED PARTIAL EFFECTS (j=1,...,J; standard errors underneath)";
+    print;
+    
+    for i (1, kx_struct-1, 1);
+//        $OP_vars[i];;
+        cOut.ME_OP[i,.];
+        "		";;
+        cOut.ME_OPse[i,.];
+    endfor;
+    print;
+    
+    if cCtl.mtype ge 2;
+        
+        gama		= cOut.HOPIT_B[kx_struct+kv+1:kx_struct+kv+(kx_mu*(capJ-1)), 1];
+        gama	    = reshape(gama, capJ-1, kx_mu)';
+        gama		= vec(gama);
+        
+        gama_se		= cOut.HOPIT_B[kx_struct+kv+1:kx_struct+kv+(kx_mu*(capJ-1)), 2];
+        gama_se		= reshape(gama_se, capJ-1, kx_mu)';
+        gama_se		= vec(gama_se);
+        
+        gama_t		= cOut.HOPIT_B[kx_struct+kv+1:kx_struct+kv+(kx_mu*(capJ-1)), 3];
+        gama_t		= reshape(gama_t ,capJ-1, kx_mu)';
+        gama_t		= vec(gama_t);
+        
+        gama_all	= gama~gama_se~gama_t;
+        
+        print;
+        print;
+        "		HOPIT VIGNETTES MODEL";
+        format 15,6;
+        
+        print;
+        "LogL";;
+        cOut.L_HOPIT;
+        print;
+        
+        print;
+        "ESTIMATED PARAMETERS: COEFFICIENT S.E. T-STAT";
+        print;
+        "Structural Parameters";
+        print;
+        
+        for i (1, kx_struct, 1);
+            $reg_vars[i];;
+            cOut.HOPIT_B[i, .];
+        endfor;
+        print;
+        
+        "Vignettes constants";
+        print;
+        
+        for i (1,kv,1);
+            $V_vars[i];;
+            cOut.HOPIT_B[kx_struct+i, .];
+        endfor;
+        print;
+        
+        "Boundary equations (j=0,...,J)";
+        print;
+        
+        for j (1,capJ-1,1);
+            
+            for i (1,kx_mu,1);
+                $reg_vars[i];;
+                gama_all[((j-1)*kx_mu)+i,.];
+            endfor;
+            print;
+            
+        endfor;
+        
+        if rows(cOut.HOPIT_B) gt kx_struct+kv+((capJ-1)*kx_mu);
+            
+            "	 1/V(sd)";;
+            cOut.HOPIT_B[kx_struct+kv+((capJ-1)*kx_mu)+1, .];
+            print;
+            
+        endif;
+        
+        print;
+        "ESTIMATED PARTIAL EFFECTS (j=1,...,J; standard errors underneath)";
+        print;
+        
+        cOut.ME_HOPIT	= delif(cOut.ME_HOPIT, cOut.ME_HOPIT[., 1] .eq 1);
+        cOut.ME_HOPITse 	= delif(cOut.ME_HOPITse, cOut.ME_HOPITse[., 1] .eq 1);
+        
+        for i (1, kx_struct, 1);
+            $X_vars[i];;
+            cOut.ME_HOPIT[i, .];
+            "		";;
+            cOut.ME_HOPITse[i, .];
+        endfor;
+        print;
+        
+    endif;
+endp;
+

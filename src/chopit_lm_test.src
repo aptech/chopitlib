@@ -1,0 +1,2260 @@
+#include cmlmt.sdf;
+#include chopit.sdf;
+
+/* spline_RP_OP_MT.PRC: RANDOM PARAMETERS OP SPLINE MODEL */
+
+proc (1) = CHOPITS_LM(dset_V, dset, struct chopitControl cCtl);
+    local y, yVX, V, X, X_struct, X_mu, X_inf, n, mtype, capJ;
+    local y_star_OP, y_star_HOPIT;
+    local OLS_B, OP_B, me_OP, me_OPse, V_OP, L_OP, IC_OP,
+        HOPIT_B, me_HOPIT, me_HOPITse, V_HOPIT, L_HOPIT, IC_HOPIT;
+    local	d_ij, phat, nam, m, stb, vc_ols, std, sig, cx, rsq, resid, dbw;
+    local startmu1, startmu, startrep, mu_temp, beta_Y, c, op_mu, retOPb, t_OP, et_OP, beta_struct, OPbse, zbetahat, mu_mat, mu_xbeta, p_ij;
+    local pordp, check, me_model, pOPxbar, pOP_se, V_cons, sig_V_inv, gama, K_HOPIT, retHOPIT, et_HOPIT, HOPIT_se, t_HOPIT;
+    local zgama, mu_ij, xbeta, p_HOPIT, p_HOPIT_xbar, p_HOPITse, y_inf, sel, beta_inf, beta_inf_struct, retMIOP, et_MIOP;
+    local mu_MIOP, MIOP_se, t_MIOP, xb_inf, xb_inf_struct, xb_struct, p_MIOP, p_MIOP_prior, p_no_inf, p_no_inf_prior, V_GOP_V2;
+    local p_aug0, p_aug1, p0_MIOP, p_inf_MIOP, pLC2_0, pLC2_1, p_inf_prior, L0, L1, L, LC_predict, pPOST_MIOP, p_MIOP_xbar, p_MIOPse;
+    local m_i, lnLiHOPIT, GOP_1_se;
+    local TOP_B, me_TOP, me_TOPse, V_TOP, L_TOP, IC_TOP, beta_struct_TOP, mu_TOP, tempered1_b, tempered2_b;
+    local IC_ALL, IC_HOPITS;
+//    local p0_MIOP_HOP, p_inf_MIOP_HOP, pPOST_MIOP_HOP, me_MIOP_HOP, me_MIOP_HOPse, p_MIOP_HOP_xbar, p_MIOP_HOPse, IC_MIOP_HOP;
+    local TOP_HOP_B, me_TOP_HOP, me_TOP_HOPse, V_TOP_HOP, L_TOP_HOP, IC_TOP_HOP, p_TOP_HOP, p_TOP_HOP_prior;
+    local retTOP_HOP, et_TOP_HOP, TOP_HOP_se, t_TOP_HOP, p_TOP_HOP_xbar, p_TOP_HOPse;
+    local gama_temp, gama0, alpha0_free, beta0_free, delta0_free, k_GOP, L_GOP, V_sig;
+    local gama1_free, delta1_free, gama2_free, delta2_free, gama3_free, delta3_free, gama4_free, delta4_free, theta0_free, theta1_free, theta2_free, V_sigma;
+    local psy_start, R_gama;
+    local beta_V1, gama0_V1, gama_V1, beta_V2, gama0_V2, gama_V2, beta_V3, gama0_V3, gama_V3, k_V_GOP, L_V_GOP;
+    local gama0_HOP, gama_HOP, beta_HOP, LR_test, df, LR_p;
+    local gama0_MIOP, gama_MIOP, gama0_TOP, gama_TOP, k_TOP_HOP, se_gama;
+    local L_GOP_V1, L_GOP_V2, L_GOP_V3, L_un, no_param_un, df_beta, df_gama0, df_gama, V_GOP, GOP_se, params;
+    local lnL_SAH, lnL_V1, beta_LR, gama_LR, mu_ijV, mu_xbetaV1, p_ijV1, lnLiV1;
+    local R, R_b_primary, R_gamma_plus, R_gamma_minus, q, free_params, Wald, params_V1, R_b_vignettes, V_all, V_GOP_V1;
+    local V_q, Wald_p, Wald_test, k_GOP_JOINT, V_GOP_JOINT, GOP_JOINT_se, L_GOP_JOINT, df_beta0, df_V_beta, R_beta0;
+    local count_hop, count_gop, score, LM_test, grad_beta, grad_g1, grad_g2, grad_g3, grad_g4;
+    local xbeta_V1, mu_xbeta_V1, p_ij_V1, grad_beta_V1, grad_g1_V1, grad_g2_V1, grad_g3_V1, grad_g4_V1, Score_anal, bhhh_anal;
+    local params_V2, grad_beta_V2, grad_g1_V2, grad_g2_V2, grad_g3_V2, grad_g4_V2, xbeta_V2, mu_xbeta_V2, p_ij_V2, R_1V, R_2V, bhhh_max;
+    local beta_check, xbeta_V3, mu_xbeta_V3, p_ij_V3, grad_beta_V3, grad_g1_V3, grad_g2_V3, grad_g3_V3, grad_g4_V3;
+    local Score_anal_RC, Score_anal_VE, df_RC, bhhh_anal_RC, df_VE, bhhh_anal_VE, V_RC, V_VE, LM_test_RC, LM_test_VE;
+    local mu_xbetaV2, p_ijV2, mu_xbetaV3, p_ijV3, fail_linear, chol_bhhh, chol_bhhh_RC, chol_bhhh_VE, V_inv, V_inv_RC, V_inv_VE;
+    local condition, cond_bhhh, cond_bhhh_VE, LM_cond, LM_cond_VE, HOPIT_grad, cond_bhhh_RC, LM_cond_RC;
+    local av_boundaries, V_gamma, G, p0, var_boundaries, se_boundaries, V_mu0, G0, V_gamma0;
+    local mu_ij_exp_new, mu_ij_linear, mu0_star, mu1_star, mu2_star, params_V3, grad_theta_V1, grad_theta_V2, grad_theta_V3, grad_theta;
+    local HOPIT_fail, retGOP_JOINT, GOP_JOINT_fail, ret_GOP, ret_GOP_V1, Hessian_joint, Hessian_joint_i, Hessian_VE, Hessian_RC;
+    local state, rand, LR_Yes_No;
+    
+    clearg index0, index1;
+
+    trap 0;
+    LR_Yes_No = 2;      //this was an option before, but turn off
+    
+    LM_test = zeros(3, 3);
+    
+    // WHICH MODELS?
+    // Set model type
+    if upper(cCtl.model) $=="OP";
+        mtype = 1;
+    elseif upper(cCtl.model) $== "HOPIT";
+        mtype = 2;
+    endif;
+    
+    cCtl.mtype = mtype;
+    cCtl.kv = rows(cCtl.v_varnames);
+    
+    // READ IN COMPOSITE DATASET SET
+    yVX = packr(loadd(dset));
+    
+    // Separate individual data
+    y 	    		= yVX[., 1];
+    X     			= yVX[., 2:cols(yVX)-cCtl.kv];
+    V				= yVX[., cols(yVX)-cCtl.kv+1:cols(yVX)];
+    
+    // Dimensions
+    cCtl.kx_all			= cols(X);
+    X_struct		= X;
+    cCtl.kx_struct       = cols(X_struct);
+    X_mu			= X;
+    cCtl.kx_mu           = cols(X_mu);
+    
+    //    X_bar_struct	= meanc(X_struct);
+    //    X_bar_mu		= meanc(X_mu);
+    
+    // Normalize data
+    y       = y - minc(y);
+    cCtl.capJ    = maxc(y) - minc(y) + 1;
+    capJ = cCtl.capJ;
+    cCtl.N       = rows(y);
+    
+    if  cCtl.capJ lt 3;
+        errorlog "`chopit`: too few categories for estimation (3 minimum). # is";
+        cCtl.capJ;
+        stop;
+    endif;
+    
+    struct Vstruct VCtl;
+    { d_ij, VCtl, phat } = _getindicatorVariable(y, cCtl.capJ, cCtl.kv, V, cCtl.N);
+    
+    // Estimate simple OLS
+    OLS_B	= (inv(X_struct'X_struct)*X_struct'y);
+    
+    // Estimate ordered probit
+    { beta_Y, startmu } = _getOPStartValues(ols_b, d_ij, cCtl.start_OP, cCtl.kx_struct, cCtl.capJ);
+    
+    // Declare structures
+    struct PV pOrdered;
+    struct DS dOrdered;
+    struct cmlmtControl cOrdered;
+    
+    // Get data structures and
+    // control structure for cml
+    { pOrdered, dOrdered, cOrdered } = _getOPCMLStructures(cCtl, beta_Y, startmu, d_ij, X_struct);
+    
+    struct cmlmtResults Ordered_out;
+    
+    Ordered_out = CMLmt(&ORDERED_MLE, pOrdered, dORDERED, cCtl.capJ, cOrdered);
+    if cCtl.print_it eq 1;
+        Ordered_out = CMLmtprt(Ordered_out);
+    endif;
+    
+    beta_Y  	= pvUnpack(Ordered_out.Par,"beta_Y");
+    op_mu   = pvUnpack(Ordered_out.Par,"mu");
+    L_OP 	= Ordered_out.Fct;
+    V_OP    = real(Ordered_out.CovPar);
+    retOPb  = Ordered_out.Retcode;
+    et_OP   = Ordered_out.ElapsedTime;
+    
+    OP_B  	= beta_Y|op_mu;
+    
+    beta_struct = beta_Y;
+    
+    
+    if ismiss(OP_B) eq 1;
+        
+        OP_B  	= ones(rows(cCtl.start_OP), 1).*-999;
+        OPbse   = OP_B;
+        t_OP    = OP_B;
+        L_OP	= -999;
+        
+    else;
+        
+        opbse   = sqrt(diag(V_OP));
+        if rows(opbse) eq 1;
+            opbse = opbse .* ones(rows(cCtl.start_OP), 1);
+        endif;
+        opbse   = missrv(opbse, 10000);
+        t_OP    = abs(OP_B ./ opbse);
+        
+    endif;
+    
+    OP_B = OP_B~opbse~t_OP;
+    
+    // Deterministic part & probabilities
+    zbetahat 	= X[., 2:cCtl.kx_struct]*beta_Y;
+    mu_mat		= op_mu' .* ones(rows(d_ij), cCtl.capJ-1);
+    mu_xbeta	= mu_mat - (zbetahat .*. ones(1, cCtl.capJ-1));
+    p_ij		= cdfn(mu_xbeta);
+    p_ij		= p_ij[., 1]~(p_ij[., 2:cols(p_ij)] - p_ij[., 1:cols(p_ij)-1]);
+    pordp		= p_ij~(1-sumr(p_ij));
+    
+    check = meanc(sumc(pordp'));
+    if check gt 1.00001 or check lt (1-0.00001);
+        errorlog "ORDERED PROBIT PROBABILITIES DON'T SUM TO 1: AVERAGE PROB IS";
+        check;
+        stop;
+    endif;
+    
+    y_star_OP	 = zbetahat;
+    
+    // CALL ME PROCEDURE AND CALCULATE INFORMATION CRITERIA
+    IC_OP 	= _IC(L_OP, cCtl.N, rows(OP_B));
+    
+    if retopb eq 0;
+        retopb = "Normal convergence";
+    else;
+        retopb 	= "Abnormal convergence";
+        L_OP 		= -999;
+        IC_OP   	= -999 .* ones(1, 4);
+    endif;
+    
+    let me_model = ordered;
+    
+    { me_OP, me_OPse,
+        pOPxbar, pOP_se } = mes(V_OP, OP_B[., 1], cCtl.capJ, me_model, meanc(X_struct[., 2:cCtl.kx_struct]), cCtl.kx_all, cCtl.kx_struct, cCtl.kx_mu, cCtl.kv, cCtl.exp_mu);
+    
+    // If just OP go to finish
+    if mtype eq 1;
+        goto finish;
+    endif;
+    
+    // ESTIMATE HOPIT VIGNETTES MODEL */
+    count_hop = 0;
+    next_try:
+        
+        // Get start values for HOPIT model
+        { gama, gama0, beta_Y, sig_V_inv, V_cons } = _getHOPITStartValues(cCtl, ols_b, cCtl.start_HOP, cCtl.kx_struct);
+    
+    // Get structures for HOPIT estimation
+    struct PV pHOPIT;
+    struct DS dHOPIT;
+    struct cmlmtControl cHOPIT;
+    
+    { pHOPIT, dHOPIT, cHOPIT, k_HOPIT } = _getHOPITCMLStructures(cCtl, vCtl, beta_Y, gama, gama0, V_cons, sig_V_inv, d_ij, X_struct, X_mu);
+    
+    // Run HOPIT estimation
+    HOPIT_fail = 0;
+    
+    struct cmlmtResults HOPIT_out;
+    HOPIT_out = CMLmt(&HOPIT_MLE, pHOPIT, dHOPIT, VCtl, cCtl.exp_mu, cCtl.kv, cCtl.kx_mu, cCtl.sig_restrict, cCtl.capJ, cHOPIT);
+    if cCtl.print_it eq 1;
+        HOPIT_out = CMLmtprt(HOPIT_out);
+    endif;
+    
+    // Unpack parameters
+    beta_Y  	= pvUnpack(HOPIT_out.Par, "beta_Y");
+    V_cons  	= pvUnpack(HOPIT_out.Par, "V_cons");
+    gama  		= pvUnpack(HOPIT_out.Par, "gama");
+    gama0  		= pvUnpack(HOPIT_out.Par, "gama0");
+    
+    if cols(gama0) eq 1;
+        gama0 = gama0';
+    endif;
+    
+    beta_HOP	= beta_Y;
+    gama0_HOP	= gama0;
+    gama_HOP	= gama;
+    gama        = (0~gama0)|gama;
+    gama		= gama';
+    
+    if cCtl.sig_restrict eq 0;
+        sig_V_inv  	= pvUnpack(HOPIT_out.Par, "sig_V_inv");
+    else;
+        sig_V_inv = 1;
+    endif;
+    
+    L_HOPIT 	= HOPIT_out.Fct;
+    V_HOPIT    	= real(HOPIT_out.CovPar);
+    retHOPIT  	= HOPIT_out.Retcode;
+    et_HOPIT   	= HOPIT_out.ElapsedTime;
+    HOPIT_grad  = HOPIT_out.Gradient;
+    
+    // Check V_HOPIT
+    { V_HOPIT, HOPIT_fail } = _checkVHOPIT(HOPIT_out, V_HOPIT);
+    
+    
+    if sig_V_inv ne 1;
+        
+        if ismiss(V_HOPIT) ne 1;
+            V_gamma     = V_HOPIT[rows(beta_Y)+rows(V_cons)+1:rows(beta_Y)+rows(V_cons)+rows(vec(gama)),rows(beta_Y)+rows(V_cons)+1:rows(beta_Y)+rows(V_cons)+rows(vec(gama))];
+        endif;
+        
+    else;
+        
+        if ismiss(V_HOPIT) ne 1;
+            V_gamma     = V_HOPIT[rows(beta_Y)+rows(V_cons)+1:rows(beta_Y)+rows(V_cons)+rows(vec(gama))-1,rows(beta_Y)+rows(V_cons)+1:rows(beta_Y)+rows(V_cons)+rows(vec(gama))-1];
+        endif;
+        
+    endif;
+    
+    if cCtl.sig_restrict eq 0;
+        HOPIT_B   	= beta_Y|V_cons|vec(gama)|sig_V_inv;
+    else;
+        HOPIT_B   	= beta_Y|V_cons|vec(gama);
+    endif;
+    
+    if maxc(abs(HOPIT_B)) ge 10;
+        HOPIT_fail = 1;
+    endif;
+    
+    if ismiss(HOPIT_B) eq 1;
+        
+        fail:
+            if fail_linear eq 1;
+            stop;
+        endif;
+        HOPIT_B		= ones(rows(cCtl.start_HOP),1) .* 10000;
+        HOPIT_se	= HOPIT_B;
+        t_HOPIT    	= HOPIT_B;
+        L_HOPIT		= -999;
+        LR_test     = -999~-999~-999;
+        LM_test     = (-999~-999~-999)|(-999~-999~-999)|(-999~-999~-999);
+        Wald_test	= -999~-999~-999;
+        HOPIT_fail  = 1;
+        
+    else;
+        
+        HOPIT_se   	= sqrt(diag(V_HOPIT));
+        
+        if rows(HOPIT_se) eq 1;
+            
+            HOPIT_se    = HOPIT_se .* ones(rows(HOPIT_B), 1);
+            HOPIT_fail  = 1;
+            
+        endif;
+        
+        HOPIT_se   	= missrv(HOPIT_se, 1000);
+        
+        if sumc(HOPIT_se .eq 10000) ge 1;
+            
+            HOPIT_fail  = 1;
+            
+        endif;
+        
+        if rows(HOPIT_se) ne k_HOPIT;
+            
+            HOPIT_fail  = 1;
+            
+        endif;
+        
+        if rows(V_HOPIT) eq 1;
+            
+            HOPIT_se    = HOPIT_se .* ones(k_HOPIT, 1);
+            HOPIT_fail  = 1;
+            
+        endif;
+        
+        if cCtl.sig_restrict eq 0;
+            se_gama		= -999|HOPIT_se[rows(beta_Y)+rows(V_cons)+1:rows(HOPIT_se)-1];
+        elseif cCtl.sig_restrict eq 1;
+            se_gama		= -999|HOPIT_se[rows(beta_Y)+rows(V_cons)+1:rows(HOPIT_se)];
+        endif;
+        
+        se_gama		= reshape(se_gama, cCtl.kx_mu, cCtl.capJ-1)';
+        se_gama		= vec(se_gama);
+        
+        if sig_V_inv ne 1;
+            HOPIT_se 	= HOPIT_se[1:rows(beta_Y)+rows(V_cons)]|se_gama|HOPIT_se[rows(beta_Y)+rows(V_cons)+rows(se_gama):rows(HOPIT_se)];
+        else;
+            HOPIT_se 	= HOPIT_se[1:rows(beta_Y)+rows(V_cons)]|se_gama;
+        endif;
+        
+        t_HOPIT    	= abs(HOPIT_B ./ HOPIT_se);
+        
+    endif;
+    
+    HOPIT_B   		= HOPIT_B~HOPIT_se~abs(HOPIT_B ./ HOPIT_se);
+    
+    // Define common boundary parameters
+    gama_LR    = gama;
+    beta_LR    = beta_Y;
+    zgama	    = X_mu*gama;
+    if cCtl.exp_mu eq 1;
+        mu_ij	= _mu_ij(zgama, cCtl.capJ, cCtl.exp_mu);
+    elseif cCtl.exp_mu eq 0;
+        mu_ij	= zgama;
+    endif;
+    
+    // Deterministic part and probabilities
+    xbeta 			= X_struct*beta_Y;
+    mu_xbeta		= mu_ij - (xbeta .*. ones(1, cCtl.capJ-1));
+    p_ij			= cdfn(mu_xbeta);
+    p_ij			= p_ij[.,1]~(p_ij[.,2:cols(p_ij)] - p_ij[.,1:cols(p_ij)-1]);
+    p_HOPIT			= p_ij~(1-sumr(p_ij));
+    
+    mu0_star = mu_xbeta[.,1];
+    mu1_star = mu0_star + mu_ij[.,2];
+    if cCtl.capJ gt 3;
+        mu2_star = mu1_star + mu_ij[.,3];
+    endif;
+    
+    // Check for ill-defined probs
+    if minc(vec(p_HOPIT)) lt 0;
+        
+        HOPIT_fail  = 1;
+        fail_linear = 1;
+        
+    endif;
+    
+    mu_xbetaV1	= (mu_ij - V_cons[1]) .* sig_V_inv;
+    p_ijV1		= cdfn(mu_xbetaV1);
+    p_ijV1		= p_ijV1[.,1]~(p_ijV1[.,2:cols(p_ijV1)] - p_ijV1[.,1:cols(p_ijV1)-1]);
+    p_ijV1		= p_ijV1~(1-sumr(p_ijV1));
+    
+    if minc(vec(p_ijV1)) lt 0;
+        
+        HOPIT_fail  = 1;
+        fail_linear = 1;
+        
+    endif;
+    
+    if cCtl.kv ge 2;
+        
+        mu_xbetaV2	= (mu_ij - V_cons[2]) .* sig_V_inv;
+        p_ijV2		= cdfn(mu_xbetaV2);
+        p_ijV2		= p_ijV2[.,1]~(p_ijV2[.,2:cols(p_ijV2)] - p_ijV2[.,1:cols(p_ijV2)-1]);
+        p_ijV2		= p_ijV2~(1-sumr(p_ijV2));
+        
+        if minc(vec(p_ijV2)) lt 0;
+            
+            HOPIT_fail  = 1;
+            fail_linear = 1;
+            
+        endif;
+        
+    endif;
+    
+    if cCtl.kv ge 3;
+        
+        mu_xbetaV3	= (mu_ij - V_cons[3]) .* sig_V_inv;
+        p_ijV3		= cdfn(mu_xbetaV3);
+        p_ijV3		= p_ijV3[.,1]~(p_ijV3[.,2:cols(p_ijV3)] - p_ijV3[.,1:cols(p_ijV3)-1]);
+        p_ijV3		= p_ijV3~(1-sumr(p_ijV3));
+        
+        if minc(vec(p_ijV3)) lt 0;
+            
+            HOPIT_fail  = 1;
+            fail_linear = 1;
+            
+        endif;
+        
+    endif;
+    
+    lnLiHOPIT		= ln(sumr(d_ij .* p_HOPIT));
+    
+    y_star_HOPIT	= xbeta;
+    
+    // CALL ME PROCEDURE AND CALCULATE INFORMATION CRITERIA */
+    
+    IC_HOPIT 	= _IC(L_HOPIT, cCtl.N, k_HOPIT);
+    
+    if retHOPIT eq 0;
+        
+        let retHOPIT = normal convergence;
+        
+    else;
+        
+        let retHOPIT 	= abnormal convergence;
+        HOPIT_fail      = 1;
+        
+    endif;
+    
+    //HOPIT_fail;stop;
+    
+    let me_model 	= hopit;
+    
+    {me_HOPIT, me_HOPITse,
+        p_HOPIT_xbar, p_HOPITse} = mes(V_HOPIT, delif(HOPIT_B[., 1], HOPIT_B[., 1] .eq 0), cCtl.capJ, me_model, meanc(X), cCtl.kx_all, cCtl.kx_struct, cCtl.kx_mu, cCtl.kv, cCtl.exp_mu);
+    
+    /* VIGNETTE SPECIFICATION TESTS */
+    
+    if cCtl.exp_mu eq 0;
+        
+    elseif cCtl.exp_mu eq 1;
+        
+        if LR_Yes_No ge 1;
+            
+            if HOPIT_fail ge 1;
+                
+                LM_test     = (-999~-999~-999)|(-999~-999~-999)|(-999~-999~-999);
+                goto skip_LM;
+                
+            endif;
+            
+            /* LM TEST */
+            
+            ?;
+            "max abs average gradient";;
+            maxc(meanc(abs(HOPIT_grad)));
+            ?;
+            
+            if maxc(meanc(abs(HOPIT_grad))) ge 0.01;
+                
+                LM_test = ones(3,3) .* -999;
+                goto skip_LM;
+                
+            endif;
+            
+            /* define derivatives under the null */
+            
+            beta_V1  	= V_cons[1]|zeros(cCtl.kx_struct-1,1);
+            if cCtl.kv ge 2;
+                beta_V2     = V_cons[2]|zeros(cCtl.kx_struct-1,1);
+                if cCtl.kv ge 3;
+                    beta_V3     = V_cons[3]|zeros(cCtl.kx_struct-1,1);
+                endif;
+            endif;
+            
+            gama_V1		= gama;
+            if cCtl.kv ge 2;
+                gama_V2 = gama;
+                if cCtl.kv ge 3;
+                    gama_V3 = gama;
+                endif;
+            endif;
+            
+            xbeta_V1 	= X_struct*beta_V1;
+            mu_xbeta_V1	= (mu_ij - (xbeta_V1 .*. ones(1, cCtl.capJ-1))) .* sig_V_inv;
+            p_ij_V1		= cdfn(mu_xbeta_V1);
+            p_ij_V1		= p_ij_V1[.,1]~(p_ij_V1[.,2:cols(p_ij_V1)] - p_ij_V1[.,1:cols(p_ij_V1)-1]);
+            p_ij_V1		= p_ij_V1~(1-sumr(p_ij_V1));
+            
+            if cCtl.kv ge 2;
+                
+                xbeta_V2 	= X_struct*beta_V2;
+                mu_xbeta_V2	= (mu_ij - (xbeta_V2 .*. ones(1, cCtl.capJ-1))) .* sig_V_inv;
+                p_ij_V2		= cdfn(mu_xbeta_V2);
+                p_ij_V2		= p_ij_V2[.,1]~(p_ij_V2[.,2:cols(p_ij_V2)] - p_ij_V2[.,1:cols(p_ij_V2)-1]);
+                p_ij_V2		= p_ij_V2~(1-sumr(p_ij_V2));
+                
+                if cCtl.kv ge 3;
+                    
+                    xbeta_V3 	= X_struct*beta_V3;
+                    mu_xbeta_V3	= (mu_ij - (xbeta_V3 .*. ones(1, cCtl.capJ-1))) .* sig_V_inv;
+                    p_ij_V3		= cdfn(mu_xbeta_V3);
+                    p_ij_V3		= p_ij_V3[.,1]~(p_ij_V3[.,2:cols(p_ij_V3)] - p_ij_V3[.,1:cols(p_ij_V3)-1]);
+                    p_ij_V3		= p_ij_V3~(1-sumr(p_ij_V3));
+                    
+                endif;
+                
+            endif;
+            
+            /* theta = 1/sigma derivatives; V1, V2 and V3 */
+            
+            if cCtl.sig_restrict eq 0;
+                
+                if cCtl.kv eq 1;
+                    
+                    {grad_theta_V1}	= _grad_theta_HOPIT(mu_xbetaV1,sig_V_inv,p_ijV1, VCtl.v_ij1);
+                    grad_theta		= grad_theta_V1;
+                    
+                elseif cCtl.kv eq 2;
+                    
+                    {grad_theta_V1}	= _grad_theta_HOPIT(mu_xbetaV1,sig_V_inv,p_ijV1, VCtl.v_ij1);
+                    {grad_theta_V2}	= _grad_theta_HOPIT(mu_xbetaV2,sig_V_inv,p_ijV2, VCtl.v_ij2);
+                    grad_theta		= grad_theta_V1 + grad_theta_V2;
+                    
+                elseif cCtl.kv eq 3;
+                    
+                    {grad_theta_V1}	= _grad_theta_HOPIT(mu_xbetaV1,sig_V_inv,p_ijV1,VCtl.v_ij1, cCtl.capJ);
+                    {grad_theta_V2}	= _grad_theta_HOPIT(mu_xbetaV2,sig_V_inv,p_ijV2,VCtl.v_ij2, cCtl.capJ);
+                    {grad_theta_V3}	= _grad_theta_HOPIT(mu_xbetaV3,sig_V_inv,p_ijV3,VCtl.v_ij3, cCtl.capJ);
+                    grad_theta		= grad_theta_V1 + grad_theta_V2 + grad_theta_V3;
+                    
+                endif;
+                
+            endif;
+            
+            
+            if cCtl.capJ eq 5;
+                
+                /* beta_Y derivatives */
+                {grad_beta} = _grad_beta_OP(mu_xbeta, d_ij, p_HOPIT, X_struct, cCtl.capJ);
+                
+                /* gradient for gamma_1 HOPIT */
+                {grad_g1}	= _grad_g_j(gama[2:cCtl.kx_mu,1], X_mu[.,2:cols(X_mu)],mu_xbeta,p_HOPIT,d_ij,1, cCtl.exp_mu);
+                
+                /* gradient for gamma_2 HOPIT */
+                {grad_g2}	= _grad_g_j(gama[., 2], X_mu, mu_xbeta[.,2:cols(mu_xbeta)],p_HOPIT[.,2:cCtl.capJ],d_ij[.,2:cCtl.capJ],1, cCtl.exp_mu);
+                
+                /* gradient for gamma_3 HOPIT */
+                {grad_g3}	= _grad_g_j(gama[., 3], X_mu, mu_xbeta[.,3:cols(mu_xbeta)],p_HOPIT[.,3:cCtl.capJ],d_ij[.,3:cCtl.capJ],1, cCtl.exp_mu);
+                
+                /* gradient for gamma_4 HOPIT */
+                {grad_g4}	= _grad_gJ(gama[., 4], X_mu, mu_xbeta[.,cols(mu_xbeta)],p_HOPIT[.,4:cCtl.capJ],d_ij[.,4:cCtl.capJ],1, cCtl.exp_mu);
+                
+                //Grad 	= grad_beta~grad_g1~grad_g2~grad_g3~grad_g4;
+                
+            elseif cCtl.capJ eq 4;
+                
+                /* beta_Y derivatives */
+                {grad_beta} = _grad_beta_OP(mu_xbeta,d_ij,p_HOPIT,X_struct, cCtl.capJ);
+                
+                /* gradient for gamma_1 HOPIT */
+                {grad_g1}	= _grad_g_j(gama[2:cCtl.kx_mu,1],X_mu[.,2:cols(X_mu)],mu_xbeta,p_HOPIT,d_ij,1, cCtl.exp_mu);
+                
+                /* gradient for gamma_2 HOPIT */
+                {grad_g2}	= _grad_g_j(gama[.,2], X_mu, mu_xbeta[.,2:cols(mu_xbeta)], p_HOPIT[.,2:cCtl.capJ], d_ij[.,2:cCtl.capJ], 1, cCtl.exp_mu);
+                
+                /* gradient for gamma_3 HOPIT */
+                {grad_g3}	= _grad_gJ(gama[.,3], X_mu, mu_xbeta[.,cols(mu_xbeta)], p_HOPIT[.,3:cCtl.capJ], d_ij[.,3:cCtl.capJ], 1);
+                
+                //Grad 	= grad_beta~grad_g1~grad_g2~grad_g3;
+                
+            elseif cCtl.capJ eq 3;
+                
+                /* beta_Y derivatives */
+                {grad_beta} = _grad_beta_OP(mu_xbeta,d_ij,p_HOPIT,X_struct, capJ);
+                
+                /* gradient for gamma_1 HOPIT */
+                {grad_g1}	= _grad_g_j(gama[2:cCtl.kx_mu,1],X_mu[.,2:cols(X_mu)],mu_xbeta,p_HOPIT,d_ij,1, cCtl.exp_mu);
+                
+                /* gradient for gamma_3 HOPIT */
+                {grad_g2}	= _grad_gJ(gama[.,2],X_mu,mu_xbeta[.,cols(mu_xbeta)],p_HOPIT[.,2:capJ],d_ij[.,2:capJ],1);
+                
+            endif;
+            
+            if cCtl.capJ eq 5;
+                
+                /* beta_V1 derivatives */
+                {grad_beta_V1} = _grad_beta_OP(mu_xbeta_V1,VCtl.v_ij1,p_ij_V1,X_struct, capJ);
+                grad_beta_V1 	= grad_beta_V1 .* sig_V_inv;
+                
+                /* gradient for gamma_1_V1 HOPIT */
+                {grad_g1_V1}	= _grad_g_j(gama_V1[2:cCtl.kx_mu,1],X_mu[.,2:cols(X_mu)],mu_xbeta_V1,p_ij_V1,VCtl.v_ij1,1, cCtl.exp_mu);
+                grad_g1_V1		= grad_g1_V1 .* sig_V_inv;
+                
+                /* gradient for gamma_2_V1 HOPIT */
+                {grad_g2_V1}	= _grad_g_j(gama_V1[.,2],X_mu,mu_xbeta_V1[.,2:cols(mu_xbeta_V1)],p_ij_V1[.,2:capJ],VCtl.v_ij1[.,2:capJ],1, cCtl.exp_mu);
+                grad_g2_V1		= grad_g2_V1 .* sig_V_inv;
+                
+                /* gradient for gamma_3_V1 HOPIT */
+                
+                {grad_g3_V1}	= _grad_g_j(gama_V1[.,3],X_mu,mu_xbeta_V1[.,3:cols(mu_xbeta_V1)],p_ij_V1[.,3:capJ],VCtl.v_ij1[.,3:capJ],1, cCtl.exp_mu);
+                grad_g3_V1		= grad_g3_V1 .* sig_V_inv;
+                
+                /* gradient for gamma_4_V1 HOPIT */
+                {grad_g4_V1}	= _grad_gJ(gama_V1[.,4],X_mu,mu_xbeta_V1[.,cols(mu_xbeta_V1)],p_ij_V1[.,4:capJ],VCtl.v_ij1[.,4:capJ],1);
+                grad_g4_V1		= grad_g4_V1 .* sig_V_inv;
+                
+                if cCtl.kv ge 2;
+                    
+                    /* beta_V2 derivatives */
+                    {grad_beta_V2} = _grad_beta_OP(mu_xbeta_V2,VCtl.v_ij2,p_ij_V2,X_struct, capJ);
+                    grad_beta_V2 	= grad_beta_V2 .* sig_V_inv;
+                    
+                    /* gradient for gamma_1_V2 HOPIT */
+                    {grad_g1_V2}	= _grad_g_j(gama_V2[2:cCtl.kx_mu,1],X_mu[.,2:cols(X_mu)],mu_xbeta_V2,p_ij_V2,VCtl.v_ij2,1, cCtl.exp_mu);
+                    grad_g1_V2		= grad_g1_V2 .* sig_V_inv;
+                    
+                    /* gradient for gamma_2_V2 HOPIT */
+                    {grad_g2_V2}	= _grad_g_j(gama_V2[.,2],X_mu,mu_xbeta_V2[.,2:cols(mu_xbeta_V2)],p_ij_V2[.,2:capJ],VCtl.v_ij2[.,2:capJ],1, cCtl.exp_mu);
+                    grad_g2_V2		= grad_g2_V2 .* sig_V_inv;
+                    
+                    /* gradient for gamma_3_V2 HOPIT */
+                    
+                    {grad_g3_V2}	= _grad_g_j(gama_V2[.,3],X_mu,mu_xbeta_V2[.,3:cols(mu_xbeta_V2)],p_ij_V2[.,3:capJ],VCtl.v_ij2[.,3:capJ],1, cCtl.exp_mu);
+                    grad_g3_V2		= grad_g3_V2 .* sig_V_inv;
+                    
+                    /* gradient for gamma_4_V2 HOPIT */
+                    {grad_g4_V2}	= _grad_gJ(gama_V2[.,4],X_mu,mu_xbeta_V2[.,cols(mu_xbeta_V2)],p_ij_V2[.,4:capJ],VCtl.v_ij2[.,4:capJ],1);
+                    grad_g4_V2		= grad_g4_V2 .* sig_V_inv;
+                    
+                    if cCtl.kv ge 3;
+                        
+                        /* beta_V3 derivatives */
+                        {grad_beta_V3} = _grad_beta_OP(mu_xbeta_V3,VCtl.v_ij3,p_ij_V3,X_struct, cCtl.capJ);
+                        grad_beta_V3 	= grad_beta_V3 .* sig_V_inv;
+                        
+                        /* gradient for gamma_1_V3 HOPIT */
+                        {grad_g1_V3}	= _grad_g_j(gama_V3[2:cCtl.kx_mu,1],X_mu[.,2:cols(X_mu)],mu_xbeta_V3,p_ij_V3,VCtl.v_ij3,1, cCtl.exp_mu);
+                        grad_g1_V3		= grad_g1_V3 .* sig_V_inv;
+                        
+                        /* gradient for gamma_2_V3 HOPIT */
+                        {grad_g2_V3}	= _grad_g_j(gama_V3[.,2],X_mu,mu_xbeta_V3[.,2:cols(mu_xbeta_V3)],p_ij_V3[.,2:cCtl.capJ],VCtl.v_ij3[.,2:cCtl.capJ],1, cCtl.exp_mu);
+                        grad_g2_V3		= grad_g2_V3 .* sig_V_inv;
+                        
+                        /* gradient for gamma_3_V3 HOPIT */
+                        
+                        {grad_g3_V3}	= _grad_g_j(gama_V3[.,3],X_mu,mu_xbeta_V3[.,3:cols(mu_xbeta_V3)],p_ij_V3[.,3:cCtl.capJ],VCtl.v_ij3[.,3:cCtl.capJ],1, cCtl.exp_mu);
+                        grad_g3_V3		= grad_g3_V3 .* sig_V_inv;
+                        
+                        /* gradient for gamma_4_V3 HOPIT */
+                        {grad_g4_V3}	= _grad_gJ(gama_V3[.,4],X_mu,mu_xbeta_V3[.,cols(mu_xbeta_V3)],p_ij_V3[.,4:cCtl.capJ],VCtl.v_ij3[.,4:cCtl.capJ],1);
+                        grad_g4_V3		= grad_g4_V3 .* sig_V_inv;
+                        
+                    endif;
+                    
+                endif;
+                
+                if cCtl.kv eq 1;
+                    Score_anal 	= grad_beta~grad_g1~grad_g2~grad_g3~grad_g4~grad_beta_V1~grad_g1_V1~grad_g2_V1~grad_g3_V1~grad_g4_V1;
+                elseif cCtl.kv eq 2;
+                    Score_anal 	= grad_beta~grad_g1~grad_g2~grad_g3~grad_g4~grad_beta_V1~grad_g1_V1~grad_g2_V1~grad_g3_V1~grad_g4_V1~grad_beta_V2~grad_g1_V2~grad_g2_V2~grad_g3_V2~grad_g4_V2;
+                elseif cCtl.kv eq 3;
+                    Score_anal 	= grad_beta~grad_g1~grad_g2~grad_g3~grad_g4~grad_beta_V1~grad_g1_V1~grad_g2_V1~grad_g3_V1~grad_g4_V1~grad_beta_V2~grad_g1_V2~grad_g2_V2~grad_g3_V2~grad_g4_V2~
+                        grad_beta_V3~grad_g1_V3~grad_g2_V3~grad_g3_V3~grad_g4_V3;
+                endif;
+                
+                if cCtl.kv eq 1;
+                    Score_anal_VE 	= grad_beta~(grad_g1+grad_g1_V1)~(grad_g2+grad_g2_V1)~(grad_g3+grad_g3_V1)~(grad_g4+grad_g4_V1)~grad_beta_V1;
+                elseif cCtl.kv eq 2;
+                    Score_anal_VE 	= grad_beta~(grad_g1+grad_g1_V1+grad_g1_V2)~(grad_g2+grad_g2_V1+grad_g2_V2)~(grad_g3+grad_g3_V1+grad_g3_V2)~(grad_g4+grad_g4_V1+grad_g4_V2)~grad_beta_V1~grad_beta_V2;
+                elseif cCtl.kv eq 3;
+                    Score_anal_VE 	= grad_beta~(grad_g1+grad_g1_V1+grad_g1_V2+grad_g1_V3)~(grad_g2+grad_g2_V1+grad_g2_V2+grad_g2_V3)~(grad_g3+grad_g3_V1+grad_g3_V2+grad_g3_V3)~
+                        (grad_g4+grad_g4_V1+grad_g4_V2+grad_g4_V3)~grad_beta_V1~grad_beta_V2~grad_beta_V2;
+                endif;
+                
+                if cCtl.kv eq 1;
+                    Score_anal_RC 	= grad_beta~grad_g1~grad_g2~grad_g3~grad_g4~grad_beta_V1[.,1]~grad_g1_V1~grad_g2_V1~grad_g3_V1~grad_g4_V1;
+                elseif cCtl.kv eq 2;
+                    Score_anal_RC 	= grad_beta~grad_g1~grad_g2~grad_g3~grad_g4~grad_beta_V1[.,1]~grad_g1_V1[.,1]~grad_g2_V1~grad_g3_V1~grad_g4_V1~grad_beta_V2~grad_g1_V2~grad_g2_V2~grad_g3_V2~grad_g4_V2;
+                elseif cCtl.kv eq 3;
+                    Score_anal_RC 	= grad_beta~grad_g1~grad_g2~grad_g3~grad_g4~grad_beta_V1[.,1]~grad_g1_V1~grad_g2_V1~grad_g3_V1~grad_g4_V1~grad_beta_V2[.,1]~grad_g1_V2~grad_g2_V2~grad_g3_V2~grad_g4_V2~
+                        grad_beta_V3[.,1]~grad_g1_V3~grad_g2_V3~grad_g3_V3~grad_g4_V3;
+                endif;
+                
+            elseif cCtl.capJ eq 4;
+                
+                /* beta_V1 derivatives */
+                {grad_beta_V1} = _grad_beta_OP(mu_xbeta_V1, VCtl.v_ij1, p_ij_V1, X_struct, cCtl.capJ);
+                grad_beta_V1 	= grad_beta_V1 .* sig_V_inv;
+                
+                /* gradient for gamma_1 HOPIT */
+                {grad_g1_V1}	= _grad_g_j(gama_V1[2:cCtl.kx_mu,1], X_mu[.,2:cols(X_mu)], mu_xbeta_V1, p_ij_V1, VCtl.v_ij1,1, cCtl.exp_mu);
+                grad_g1_V1		= grad_g1_V1 .* sig_V_inv;
+                
+                /* gradient for gamma_2 HOPIT */
+                {grad_g2_V1}	= _grad_g_j(gama_V1[.,2], X_mu, mu_xbeta_V1[.,2:cols(mu_xbeta_V1)], p_ij_V1[.,2:cCtl.capJ], VCtl.v_ij1[.,2:cCtl.capJ], 1, cCtl.exp_mu);
+                grad_g2_V1		= grad_g2_V1 .* sig_V_inv;
+                
+                /* gradient for gamma_3 HOPIT */
+                {grad_g3_V1}	= _grad_gJ(gama_V1[.,3],X_mu,mu_xbeta_V1[.,cols(mu_xbeta_V1)],p_ij_V1[.,3:cCtl.capJ],VCtl.v_ij1[.,3:cCtl.capJ],1);
+                grad_g3_V1		= grad_g3_V1 .* sig_V_inv;
+                
+                if cCtl.kv ge 2;
+                    
+                    /* beta_V2 derivatives */
+                    {grad_beta_V2} = _grad_beta_OP(mu_xbeta_V2,VCtl.v_ij2,p_ij_V2,X_struct, cCtl.capJ);
+                    grad_beta_V2 	= grad_beta_V2 .* sig_V_inv;
+                    
+                    /* gradient for gamma_1 HOPIT */
+                    {grad_g1_V2}	= _grad_g_j(gama_V2[2:cCtl.kx_mu, 1],X_mu[., 2:cols(X_mu)],mu_xbeta_V2,p_ij_V2,VCtl.v_ij2,1,cCtl.exp_mu);
+                    grad_g1_V2		= grad_g1_V2 .* sig_V_inv;
+                    
+                    /* gradient for gamma_2 HOPIT */
+                    {grad_g2_V2}	= _grad_g_j(gama_V2[., 2],X_mu,mu_xbeta_V2[., 2:cols(mu_xbeta_V2)],p_ij_V2[.,2:cCtl.capJ],VCtl.v_ij2[.,2:cCtl.capJ],1,cCtl.exp_mu);
+                    grad_g2_V2		= grad_g2_V2 .* sig_V_inv;
+                    
+                    /* gradient for gamma_3 HOPIT */
+                    {grad_g3_V2}	= _grad_gJ(gama_V2[., 3],X_mu, mu_xbeta_V2[., cols(mu_xbeta_V2)], p_ij_V2[., 3:cCtl.capJ], VCtl.v_ij2[., 3:cCtl.capJ],1);
+                    grad_g3_V2		= grad_g3_V2 .* sig_V_inv;
+                    
+                    if cCtl.kv ge 3;
+                        
+                        /* beta_V3 derivatives */
+                        {grad_beta_V3} = _grad_beta_OP(mu_xbeta_V3,VCtl.v_ij3,p_ij_V3,X_struct, cCtl.capJ);
+                        grad_beta_V3 	= grad_beta_V3 .* sig_V_inv;
+                        
+                        /* gradient for gamma_1 HOPIT */
+                        {grad_g1_V3}	= _grad_g_j(gama_V3[2:cCtl.kx_mu,1],X_mu[.,2:cols(X_mu)],mu_xbeta_V3,p_ij_V3,VCtl.v_ij3,1,cCtl.exp_mu);
+                        grad_g1_V3		= grad_g1_V3 .* sig_V_inv;
+                        
+                        /* gradient for gamma_2 HOPIT */
+                        {grad_g2_V3}	= _grad_g_j(gama_V3[.,2],X_mu,mu_xbeta_V3[.,2:cols(mu_xbeta_V3)],p_ij_V3[.,2:cCtl.capJ],VCtl.v_ij3[.,2:cCtl.capJ],1,cCtl.exp_mu);
+                        grad_g2_V3		= grad_g2_V3 .* sig_V_inv;
+                        
+                        /* gradient for gamma_3 HOPIT */
+                        {grad_g3_V3}	= _grad_gJ(gama_V3[.,3],X_mu,mu_xbeta_V3[.,cols(mu_xbeta_V3)],p_ij_V3[.,3:cCtl.capJ],VCtl.v_ij3[.,3:cCtl.capJ],1);
+                        grad_g3_V3		= grad_g3_V3 .* sig_V_inv;
+                        
+                    endif;
+                    
+                endif;
+                
+                if cCtl.kv eq 1;
+                    Score_anal 	= grad_beta~grad_g1~grad_g2~grad_g3~grad_beta_V1~grad_g1_V1~grad_g2_V1~grad_g3_V1;
+                elseif cCtl.kv eq 2;
+                    Score_anal 	= grad_beta~grad_g1~grad_g2~grad_g3~grad_beta_V1~grad_g1_V1~grad_g2_V1~grad_g3_V1~grad_beta_V2~grad_g1_V2~grad_g2_V2~grad_g3_V2;
+                elseif cCtl.kv eq 3;
+                    Score_anal 	= grad_beta~grad_g1~grad_g2~grad_g3~grad_beta_V1~grad_g1_V1~grad_g2_V1~grad_g3_V1~grad_beta_V2~grad_g1_V2~grad_g2_V2~grad_g3_V2~
+                        grad_beta_V3~grad_g1_V3~grad_g2_V3~grad_g3_V3;
+                endif;
+                
+                if cCtl.kv eq 1;
+                    Score_anal_VE 	= grad_beta~(grad_g1+grad_g1_V1)~(grad_g2+grad_g2_V1)~(grad_g3+grad_g3_V1)~grad_beta_V1;
+                elseif cCtl.kv eq 2;
+                    Score_anal_VE 	= grad_beta~(grad_g1+grad_g1_V1+grad_g1_V2)~(grad_g2+grad_g2_V1+grad_g2_V2)~(grad_g3+grad_g3_V1+grad_g3_V2)~grad_beta_V1~grad_beta_V2;
+                elseif cCtl.kv eq 3;
+                    Score_anal_VE 	= grad_beta~(grad_g1+grad_g1_V1+grad_g1_V2+grad_g1_V3)~(grad_g2+grad_g2_V1+grad_g2_V2+grad_g2_V3)~(grad_g3+grad_g3_V1+grad_g3_V2+grad_g3_V3)~
+                        grad_beta_V1~grad_beta_V2~grad_beta_V3;
+                endif;
+                
+                if cCtl.kv eq 1;
+                    Score_anal_RC 	= grad_beta~grad_g1~grad_g2~grad_g3~grad_beta_V1[.,1]~grad_g1_V1~grad_g2_V1~grad_g3_V1;
+                elseif cCtl.kv eq 2;
+                    Score_anal_RC 	= grad_beta~grad_g1~grad_g2~grad_g3~grad_beta_V1[.,1]~grad_g1_V1~grad_g2_V1~grad_g3_V1~grad_beta_V2[.,1]~grad_g1_V2~grad_g2_V2~grad_g3_V2;
+                elseif cCtl.kv eq 3;
+                    Score_anal_RC 	= grad_beta~grad_g1~grad_g2~grad_g3~grad_beta_V1[.,1]~grad_g1_V1~grad_g2_V1~grad_g3_V1~grad_beta_V2[.,1]~grad_g1_V2~grad_g2_V2~grad_g3_V2~
+                        grad_beta_V3[.,1]~grad_g1_V3~grad_g2_V3~grad_g3_V3;
+                endif;
+                
+                //END OF J=4 BLOCK
+                
+            elseif cCtl.capJ eq 3;
+                
+                /* beta_V1 derivatives */
+                {grad_beta_V1} = _grad_beta_OP(mu_xbeta_V1,VCtl.v_ij1,p_ij_V1,X_struct, cCtl.capJ);
+                grad_beta_V1 	= grad_beta_V1 .* sig_V_inv;
+                
+                /* gradient for gamma_1 HOPIT */
+                {grad_g1_V1}	= _grad_g_j(gama_V1[2:cCtl.kx_mu,1],X_mu[.,2:cols(X_mu)],mu_xbeta_V1,p_ij_V1,VCtl.v_ij1,1, cCtl.exp_mu);
+                grad_g1_V1		= grad_g1_V1 .* sig_V_inv;
+                
+                /* gradient for gamma_2 HOPIT */
+                {grad_g2_V1}	= _grad_gJ(gama_V1[.,2],X_mu,mu_xbeta_V1[.,cols(mu_xbeta_V1)],p_ij_V1[.,2:cCtl.capJ],VCtl.v_ij1[.,2:cCtl.capJ],1);
+                grad_g2_V1		= grad_g2_V1 .* sig_V_inv;
+                
+                if cCtl.kv ge 2;
+                    
+                    /* beta_V2 derivatives */
+                    {grad_beta_V2} = _grad_beta_OP(mu_xbeta_V2,VCtl.v_ij2,p_ij_V2,X_struct, cCtl.capJ);
+                    grad_beta_V2 	= grad_beta_V2 .* sig_V_inv;
+                    
+                    /* gradient for gamma_1 HOPIT */
+                    {grad_g1_V2}	= _grad_g_j(gama_V2[2:cCtl.kx_mu,1],X_mu[.,2:cols(X_mu)],mu_xbeta_V2,p_ij_V2,VCtl.v_ij2,1, cCtl.exp_mu);
+                    grad_g1_V2		= grad_g1_V2 .* sig_V_inv;
+                    
+                    /* gradient for gamma_2 HOPIT */
+                    {grad_g2_V2}	= _grad_gJ(gama_V2[.,2], X_mu, mu_xbeta_V2[.,cols(mu_xbeta_V2)],p_ij_V2[.,2:cCtl.capJ],VCtl.v_ij2[.,2:cCtl.capJ],1);
+                    grad_g2_V2		= grad_g2_V2 .* sig_V_inv;
+                    
+                    if cCtl.kv ge 3;
+                        
+                        /* beta_V3 derivatives */
+                        grad_beta_V3  = _grad_beta_OP(mu_xbeta_V3,VCtl.v_ij3,p_ij_V3,X_struct, cCtl.capJ);
+                        grad_beta_V3 	= grad_beta_V3 .* sig_V_inv;
+                        
+                        /* gradient for gamma_1 HOPIT */
+                        grad_g1_V3	= _grad_g_j(gama_V3[2:cCtl.kx_mu,1],X_mu[.,2:cols(X_mu)],mu_xbeta_V3,p_ij_V3,VCtl.v_ij3,1, cCtl.exp_mu);
+                        grad_g1_V3		= grad_g1_V3 .* sig_V_inv;
+                        
+                        /* gradient for gamma_3 HOPIT */
+                        grad_g2_V3	= _grad_gJ(gama_V3[., 2],X_mu,mu_xbeta_V3[.,cols(mu_xbeta_V3)],p_ij_V3[.,2:cCtl.capJ],VCtl.v_ij3[.,2:cCtl.capJ],1);
+                        grad_g2_V3		= grad_g2_V3 .* sig_V_inv;
+                        
+                    endif;
+                    
+                endif;
+                
+                if cCtl.kv eq 1;
+                    Score_anal 	= grad_beta~grad_g1~grad_g2~grad_beta_V1~grad_g1_V1~grad_g2_V1;
+                elseif cCtl.kv eq 2;
+                    Score_anal 	= grad_beta~grad_g1~grad_g2~grad_beta_V1~grad_g1_V1~grad_g2_V1~grad_beta_V2~grad_g1_V2~grad_g2_V2;
+                elseif cCtl.kv eq 3;
+                    Score_anal 	= grad_beta~grad_g1~grad_g2~grad_beta_V1~grad_g1_V1~grad_g2_V1~grad_beta_V2~grad_g1_V2~grad_g2_V2~
+                        grad_beta_V3~grad_g1_V3~grad_g2_V3;
+                endif;
+                
+                if cCtl.kv eq 1;
+                    Score_anal_VE 	= grad_beta~(grad_g1+grad_g1_V1)~(grad_g2+grad_g2_V1)~grad_beta_V1;
+                elseif cCtl.kv eq 2;
+                    Score_anal_VE 	= grad_beta~(grad_g1+grad_g1_V1+grad_g1_V2)~(grad_g2+grad_g2_V1+grad_g2_V2)~grad_beta_V1~grad_beta_V2;
+                elseif cCtl.kv eq 3;
+                    Score_anal_VE 	= grad_beta~(grad_g1+grad_g1_V1+grad_g1_V2+grad_g1_V3)~(grad_g2+grad_g2_V1+grad_g2_V2+grad_g2_V3)~
+                        grad_beta_V1~grad_beta_V2~grad_beta_V3;
+                endif;
+                
+                if cCtl.kv eq 1;
+                    Score_anal_RC 	= grad_beta~grad_g1~grad_g2~grad_beta_V1[.,1]~grad_g1_V1~grad_g2_V1;
+                elseif cCtl.kv eq 2;
+                    Score_anal_RC 	= grad_beta~grad_g1~grad_g2~grad_beta_V1[.,1]~grad_g1_V1~grad_g2_V1~grad_beta_V2[.,1]~grad_g1_V2~grad_g2_V2;
+                elseif cCtl.kv eq 3;
+                    Score_anal_RC 	= grad_beta~grad_g1~grad_g2~grad_beta_V1[.,1]~grad_g1_V1~grad_g2_V1~grad_beta_V2[.,1]~grad_g1_V2~grad_g2_V2~
+                        grad_beta_V3[.,1]~grad_g1_V3~grad_g2_V3;
+                endif;
+                
+                //END OF J=3 BLOCK
+                
+            endif;
+            
+            k_GOP_JOINT	= (rows(vec(beta_HOP)) + rows(vec(gama0_HOP)) + rows(vec(gama_HOP)))*(cCtl.kv+1);
+            
+            if cCtl.sig_restrict eq 0;
+                
+                Score_anal      = Score_anal~grad_theta;
+                Score_anal_RC   = Score_anal_RC~grad_theta;
+                Score_anal_VE   = Score_anal_VE~grad_theta;
+                
+            endif;
+            
+            df				= cols(Score_anal) - (k_HOPIT);
+            bhhh_anal		= Score_anal'Score_anal;
+            
+            df_RC			= cols(score_anal_RC) - (k_HOPIT);
+            bhhh_anal_RC	= score_anal_RC'score_anal_RC;
+            
+            df_VE			= cols(score_anal_VE) - (k_HOPIT);
+            bhhh_anal_VE	= score_anal_VE'score_anal_VE;
+            
+            bhhh_max    	= 1;
+            bhhh_anal   	= bhhh_anal ./ bhhh_max;
+            bhhh_anal_RC   	= bhhh_anal_RC ./ bhhh_max;
+            bhhh_anal_VE   	= bhhh_anal_VE ./ bhhh_max;
+            
+            if cCtl.capJ eq 3;
+                
+                if cCtl.kv eq 1;
+                    score_anal 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_beta_V1)|sumc(grad_g1_V1)|sumc(grad_g2_V1));
+                elseif cCtl.kv eq 2;
+                    score_anal 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_beta_V1)|sumc(grad_g1_V1)|sumc(grad_g2_V1)|sumc(grad_beta_V2)|sumc(grad_g1_V2)|sumc(grad_g2_V2));
+                elseif cCtl.kv eq 3;
+                    score_anal 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_beta_V1)|sumc(grad_g1_V1)|sumc(grad_g2_V1)|sumc(grad_beta_V2)|sumc(grad_g1_V2)|sumc(grad_g2_V2)|
+                        sumc(grad_beta_V3)|sumc(grad_g1_V3)|sumc(grad_g2_V3));
+                endif;
+                
+            elseif cCtl.capJ eq 4;
+                
+                if cCtl.kv eq 1;
+                    score_anal 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_g3)|sumc(grad_beta_V1)|sumc(grad_g1_V1)|sumc(grad_g2_V1)|sumc(grad_g3_V1));
+                elseif cCtl.kv eq 2;
+                    score_anal 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_g3)|sumc(grad_beta_V1)|sumc(grad_g1_V1)|sumc(grad_g2_V1)|sumc(grad_g3_V1)|sumc(grad_beta_V2)|sumc(grad_g1_V2)|sumc(grad_g2_V2)|sumc(grad_g3_V2));
+                elseif cCtl.kv eq 3;
+                    score_anal 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_g3)|sumc(grad_beta_V1)|sumc(grad_g1_V1)|sumc(grad_g2_V1)|sumc(grad_g3_V1)|sumc(grad_beta_V2)|sumc(grad_g1_V2)|sumc(grad_g2_V2)|sumc(grad_g3_V2)|
+                        sumc(grad_beta_V3)|sumc(grad_g1_V3)|sumc(grad_g2_V3)|sumc(grad_g3_V3));
+                endif;
+                
+            elseif cCtl.capJ eq 5;
+                
+                if cCtl.kv eq 1;
+                    score_anal 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_g3)|sumc(grad_g4)|sumc(grad_beta_V1)|sumc(grad_g1_V1)|sumc(grad_g2_V1)|sumc(grad_g3_V1)|sumc(grad_g4_V1));
+                elseif cCtl.kv eq 2;
+                    score_anal 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_g3)|sumc(grad_g4)|sumc(grad_beta_V1)|sumc(grad_g1_V1)|sumc(grad_g2_V1)|sumc(grad_g3_V1)|sumc(grad_g4_V1)|sumc(grad_beta_V2)|sumc(grad_g1_V2)|sumc(grad_g2_V2)|sumc(grad_g3_V2)|sumc(grad_g4_V2));
+                elseif cCtl.kv eq 3;
+                    score_anal 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_g3)|sumc(grad_g4)|sumc(grad_beta_V1)|sumc(grad_g1_V1)|sumc(grad_g2_V1)|sumc(grad_g3_V1)|sumc(grad_g4_V1)|sumc(grad_beta_V2)|sumc(grad_g1_V2)|sumc(grad_g2_V2)|sumc(grad_g3_V2)|sumc(grad_g4_V2)|
+                        sumc(grad_beta_V3)|sumc(grad_g1_V3)|sumc(grad_g2_V3)|sumc(grad_g3_V3)|sumc(grad_g4_V3));
+                endif;
+                
+            endif;
+            
+            
+            if cCtl.capJ eq 3;
+                
+                if cCtl.kv eq 1;
+                    score_anal_VE 	= (sumc(grad_beta)|sumc(grad_g1+grad_g1_V1)|sumc(grad_g2+grad_g2_V1)|sumc(grad_beta_V1));
+                elseif cCtl.kv eq 2;
+                    score_anal_VE 	= (sumc(grad_beta)|sumc(grad_g1+grad_g1_V1+grad_g1_V2)|sumc(grad_g2+grad_g2_V1+grad_g2_V2)|sumc(grad_beta_V1)|sumc(grad_beta_V2));
+                elseif cCtl.kv eq 3;
+                    score_anal_VE 	= (sumc(grad_beta)|sumc(grad_g1+grad_g1_V1+grad_g1_V2+grad_g1_V3)|sumc(grad_g2+grad_g2_V1+grad_g2_V2+grad_g2_V3)|
+                        sumc(grad_beta_V1)|sumc(grad_beta_V2)|sumc(grad_beta_V3));
+                endif;
+                
+            elseif cCtl.capJ eq 4;
+                
+                if cCtl.kv eq 1;
+                    score_anal_VE 	= (sumc(grad_beta)|sumc(grad_g1+grad_g1_V1)|sumc(grad_g2+grad_g2_V1)|sumc(grad_g3+grad_g3_V1)|sumc(grad_beta_V1));
+                elseif cCtl.kv eq 2;
+                    score_anal_VE 	= (sumc(grad_beta)|sumc(grad_g1+grad_g1_V1+grad_g1_V2)|sumc(grad_g2+grad_g2_V1+grad_g2_V2)|sumc(grad_g3+grad_g3_V1+grad_g3_V2)|sumc(grad_beta_V1)|sumc(grad_beta_V2));
+                elseif cCtl.kv eq 3;
+                    score_anal_VE 	= (sumc(grad_beta)|sumc(grad_g1+grad_g1_V1+grad_g1_V2+grad_g1_V3)|sumc(grad_g2+grad_g2_V1+grad_g2_V2+grad_g2_V3)|sumc(grad_g3+grad_g3_V1+grad_g3_V2+grad_g3_V3)|
+                        sumc(grad_beta_V1)|sumc(grad_beta_V2)|sumc(grad_beta_V3));
+                endif;
+                
+            elseif cCtl.capJ eq 5;
+                
+                if cCtl.kv eq 1;
+                    score_anal_VE 	= (sumc(grad_beta)|sumc(grad_g1+grad_g1_V1)|sumc(grad_g2+grad_g2_V1)|sumc(grad_g3+grad_g3_V1)|sumc(grad_g4+grad_g4_V1)|sumc(grad_beta_V1));
+                elseif cCtl.kv eq 2;
+                    score_anal_VE 	= (sumc(grad_beta)|sumc(grad_g1+grad_g1_V1+grad_g1_V2)|sumc(grad_g2+grad_g2_V1+grad_g2_V2)|sumc(grad_g3+grad_g3_V1+grad_g3_V2)|sumc(grad_g4+grad_g4_V1+grad_g4_V2)|sumc(grad_beta_V1)|sumc(grad_beta_V2));
+                elseif cCtl.kv eq 3;
+                    score_anal_VE 	= (sumc(grad_beta)|sumc(grad_g1+grad_g1_V1+grad_g1_V2+grad_g1_V3)|sumc(grad_g2+grad_g2_V1+grad_g2_V2+grad_g2_V3)|sumc(grad_g3+grad_g3_V1+grad_g3_V2+grad_g3_V3)|sumc(grad_g4+grad_g4_V1+grad_g4_V2+grad_g4_V3)|
+                        sumc(grad_beta_V1)|sumc(grad_beta_V2)|sumc(grad_beta_V3));
+                endif;
+                
+            endif;
+            
+            if cCtl.capJ eq 3;
+                
+                if cCtl.kv eq 1;
+                    score_anal_RC 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_beta_V1[.,1])|sumc(grad_g1_V1)|sumc(grad_g2_V1));
+                elseif cCtl.kv eq 2;
+                    score_anal_RC 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_beta_V1[.,1])|sumc(grad_g1_V1)|sumc(grad_g2_V1)|sumc(grad_beta_V2[.,1])|sumc(grad_g1_V2)|sumc(grad_g2_V2));
+                elseif cCtl.kv eq 3;
+                    score_anal_RC 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_beta_V1[.,1])|sumc(grad_g1_V1)|sumc(grad_g2_V1)|sumc(grad_beta_V2[.,1])|sumc(grad_g1_V2)|sumc(grad_g2_V2)|
+                        sumc(grad_beta_V3[.,1])|sumc(grad_g1_V3)|sumc(grad_g2_V3));
+                endif;
+                
+            elseif cCtl.capJ eq 4;
+                
+                if cCtl.kv eq 1;
+                    score_anal_RC 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_g3)|sumc(grad_beta_V1[.,1])|sumc(grad_g1_V1)|sumc(grad_g2_V1)|sumc(grad_g3_V1));
+                elseif cCtl.kv eq 2;
+                    score_anal_RC 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_g3)|sumc(grad_beta_V1[.,1])|sumc(grad_g1_V1)|sumc(grad_g2_V1)|sumc(grad_g3_V1)|sumc(grad_beta_V2[.,1])|sumc(grad_g1_V2)|sumc(grad_g2_V2)|sumc(grad_g3_V2));
+                elseif cCtl.kv eq 3;
+                    score_anal_RC 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_g3)|sumc(grad_beta_V1[.,1])|sumc(grad_g1_V1)|sumc(grad_g2_V1)|sumc(grad_g3_V1)|sumc(grad_beta_V2[.,1])|sumc(grad_g1_V2)|sumc(grad_g2_V2)|sumc(grad_g3_V2)|
+                        sumc(grad_beta_V3[.,1])|sumc(grad_g1_V3)|sumc(grad_g2_V3)|sumc(grad_g3_V3));
+                endif;
+                
+            elseif cCtl.capJ eq 5;
+                
+                if cCtl.kv eq 1;
+                    score_anal_RC 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_g3)|sumc(grad_g4)|sumc(grad_beta_V1[.,1])|sumc(grad_g1_V1)|sumc(grad_g2_V1)|sumc(grad_g3_V1)|sumc(grad_g4_V1));
+                elseif cCtl.kv eq 2;
+                    score_anal_RC 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_g3)|sumc(grad_g4)|sumc(grad_beta_V1[.,1])|sumc(grad_g1_V1)|sumc(grad_g2_V1)|sumc(grad_g3_V1)|sumc(grad_g4_V1)|sumc(grad_beta_V2[.,1])|sumc(grad_g1_V2)|sumc(grad_g2_V2)|sumc(grad_g3_V2)|sumc(grad_g4_V2));
+                elseif cCtl.kv eq 3;
+                    score_anal_RC 	= (sumc(grad_beta)|sumc(grad_g1)|sumc(grad_g2)|sumc(grad_g3)|sumc(grad_g4)|sumc(grad_beta_V1[.,1])|sumc(grad_g1_V1)|sumc(grad_g2_V1)|sumc(grad_g3_V1)|sumc(grad_g4_V1)|sumc(grad_beta_V2[.,1])|sumc(grad_g1_V2)|sumc(grad_g2_V2)|sumc(grad_g3_V2)|sumc(grad_g4_V2)|
+                        sumc(grad_beta_V3[.,1])|sumc(grad_g1_V3)|sumc(grad_g2_V3)|sumc(grad_g3_V3)|sumc(grad_g4_V3));
+                endif;
+                
+            endif;
+            
+            if cCtl.sig_restrict eq 0;
+                
+                Score_anal      = Score_anal|sumc(grad_theta);
+                Score_anal_RC   = Score_anal_RC|sumc(grad_theta);
+                Score_anal_VE   = Score_anal_VE|sumc(grad_theta);
+                
+            endif;
+            
+            trap 1;
+            
+            if ismiss(eye(rows(bhhh_anal)) / bhhh_anal);
+                LM_test     = (-999~-999~-999);
+            else;
+                
+                V_inv     = eye(rows(bhhh_anal)) / bhhh_anal;
+                LM_test 	= score_anal'*(V_inv)*score_anal;
+                LM_test		= LM_test~df~cdfChic(LM_test,df);
+                if LM_test[1] le 0;
+                    LM_test = -999~-999~-999;
+                endif;
+                
+                if cCtl.print_it eq 1;
+                    
+                    ?;
+                    "average score        ";;
+                    meanc(abs(sumc(score_anal)));
+                    "LM_test                ";;
+                    LM_test;
+                    ?;
+                    
+                endif;
+                
+                if cCtl.check_con eq 1 and LM_test[1,3] lt 0.05;
+                    
+                    if count_hop lt 1;
+                        
+                        if cCtl.sig_restrict eq 1;
+                            cCtl.start_HOP = zeros(cCtl.kx_struct+cCtl.kv+cCtl.kx_mu-1+(cCtl.kx_mu*(cCtl.capJ-2)),1);
+                        else;
+                            cCtl.start_HOP = zeros(cCtl.kx_struct+cCtl.kv+cCtl.kx_mu-1+(cCtl.kx_mu*(cCtl.capJ-2)),1)|sig_V_inv;
+                        endif;
+                        count_hop = count_hop + 1;
+                        goto next_try;
+                        
+                    endif;
+                    
+                endif;
+                
+            endif;
+            
+            if ismiss(eye(rows(bhhh_anal_VE)) / bhhh_anal_VE);
+                LM_test_VE 	= -999~-999~-999;
+            else;
+                
+                V_inv_VE     = eye(rows(bhhh_anal_VE)) / bhhh_anal_VE;
+                LM_test_VE 	= score_anal_VE'*(V_inv_VE)*score_anal_VE;
+                LM_test_VE	= LM_test_VE~df_VE~cdfChic(LM_test_VE,df_VE);
+                if LM_test_VE[1] le 0;
+                    LM_test_VE = -999~-999~-999;
+                endif;
+                
+                if cCtl.print_it eq 1;
+                    
+                    ?;
+                    "average score VE         ";;
+                    meanc(abs(score_anal_VE));
+                    "LM_test_VE                 ";;
+                    LM_test_VE;
+                    ?;
+                    
+                endif;
+                
+            endif;
+            
+            
+            if ismiss(eye(rows(bhhh_anal_RC)) / bhhh_anal_RC);
+                LM_test_RC  = -999~-999~-999;
+                
+            else;
+                
+                V_inv_RC     = eye(rows(bhhh_anal_RC)) / bhhh_anal_RC;
+                LM_test_RC 	= score_anal_RC'*(V_inv_RC)*score_anal_RC;
+                LM_test_RC	= LM_test_RC~df_RC~cdfChic(LM_test_RC,df_RC);
+                if LM_test_RC[1] le 0;
+                    LM_test_RC = -999~-999~-999;
+                endif;
+                
+                if cCtl.print_it eq 1;
+                    
+                    ?;
+                    "average score RC         ";;
+                    meanc(abs(score_anal_RC));
+                    "LM_test_RC                 ";;
+                    LM_test_RC;
+                    ?;
+                    
+                endif;
+                
+            endif;
+            
+            if cCtl.cond_Y_N eq 1;
+                
+                if abs(LM_test[1,3]) le 0.05;
+                    
+                    if cond(chol_bhhh) ge 1500;
+                        
+                        condition   = eye(rows(bhhh_anal)) .* 0.00001;
+                        
+                        if LM_test[1,3] le 0.01;
+                            condition   = eye(rows(bhhh_anal)) .* 0.0001;
+                        endif;
+                        
+                        cond_bhhh   = bhhh_anal + condition;
+                        chol_bhhh	= chol(cond_bhhh);
+                        V_inv		= (eye(rows(chol_bhhh))/chol_bhhh)*((eye(rows(chol_bhhh))/chol_bhhh))';
+                        LM_cond     = score_anal'*(V_inv ./ N)*score_anal;
+                        LM_cond		= LM_cond~df~cdfChic(LM_cond,df);
+                        
+                        if LM_test[1] ge LM_cond[1];
+                            LM_test = LM_cond;
+                        endif;
+                        
+                        "LM_test (post conditioning)";;
+                        LM_test;
+                        ?;
+                        
+                    endif;
+                    
+                endif;
+                
+                if abs(LM_test_VE[1,3]) le 0.05;
+                    
+                    if cond(chol_bhhh_VE) ge 1200;
+                        
+                        condition   = eye(rows(bhhh_anal_VE)) .* 0.00001;
+                        
+                        if LM_test_VE[1,3] le 0.01;
+                            condition   = eye(rows(bhhh_anal_VE)) .* 0.0001;
+                        endif;
+                        
+                        cond_bhhh_VE    = bhhh_anal_VE + condition;
+                        chol_bhhh_VE	= chol(cond_bhhh_VE);
+                        V_inv_VE		= (eye(rows(chol_bhhh_VE))/chol_bhhh_VE)*((eye(rows(chol_bhhh_VE))/chol_bhhh_VE))';
+                        LM_cond_VE      = score_anal_VE'*(V_inv_VE ./ N)*score_anal_VE;
+                        LM_cond_VE		= LM_cond_VE~df_VE~cdfChic(LM_cond_VE,df_VE);
+                        
+                        if LM_test_VE[1] ge LM_cond_VE[1];
+                            LM_test_VE = LM_cond_VE;
+                        endif;
+                        
+                        "LM_test VE (post conditioning)";;
+                        LM_test_VE;
+                        ?;
+                        
+                    endif;
+                    
+                endif;
+                
+                if abs(LM_test_RC[1,3]) le 0.05;
+                    
+                    if cond(chol_bhhh_RC) ge 5000;
+                        
+                        condition   = eye(rows(bhhh_anal_RC)) .* 0.00001;
+                        
+                        if LM_test_RC[1,3] le 0.01;
+                            condition   = eye(rows(bhhh_anal_RC)) .* 0.0001;
+                        endif;
+                        
+                        cond_bhhh_RC    = bhhh_anal_RC + condition;
+                        chol_bhhh_RC	= chol(cond_bhhh_RC);
+                        V_inv_RC		= (eye(rows(chol_bhhh_RC))/chol_bhhh_RC)*((eye(rows(chol_bhhh_RC))/chol_bhhh_RC))';
+                        LM_cond_RC      = score_anal_RC'*(V_inv_RC ./ N)*score_anal_RC;
+                        LM_cond_RC		= LM_cond_RC~df_RC~cdfChic(LM_cond_RC,df_RC);
+                        
+                        if LM_test_RC[1] ge LM_cond_RC[1];
+                            LM_test_RC = LM_cond_RC;
+                        endif;
+                        
+                        "LM_test RC (post conditioning)";;
+                        LM_test_RC;
+                        ?;
+                        
+                    endif;
+                    
+                endif;
+                
+            endif;
+            
+            LM_test = LM_test|LM_test_VE|LM_test_RC;
+            
+            skip_LM:
+                
+                if LR_Yes_No eq 2;
+                
+                Wald_test   = -999~-999~-999;
+                LR_test     = Wald_test;
+                goto skip_test;
+                
+            endif;
+            
+            skip_test:
+                
+            endif;
+        
+    endif;
+    
+    if mtype eq 2;
+        goto finish;
+    endif;
+    
+    finish:
+        
+        /* NEED TO STACK IC'S TO DETERMINE OPTIMAL MODEL: KEEP HOPIT VARIANTS SEPARATE */
+        
+        if mtype eq 1;
+        IC_ALL		= IC_OP;
+    endif;
+    
+    if mtype eq 2;
+        IC_HOPITS	= IC_HOPIT;
+        IC_ALL		= IC_OP;
+    endif;
+    
+    IC_ALL		= seqa(1,1,rows(IC_ALL))~IC_ALL;
+    IC_HOPITS	= seqa(1,1,rows(IC_HOPITS))~IC_HOPITS;
+    
+    /* RETURN OUTPUTS */
+    struct chopitOut cOut;
+    cOut.ols_b = ols_b;
+    cOut.op_b = op_b;
+    cOut.me_op = me_op;
+  //  cOut.me_op_se = me_op_se;
+    cOut.v_op = v_op;
+    cOut.l_op = l_op;
+    cOut.ic_op = ic_op;
+    cOut.pord_p = pordp;
+    cOut.y_star_op = y_star_OP;
+    cOut.hopit_b = hoPIT_B;
+    cOut.me_hopit = me_HOPIT;
+    cOut.me_hopitse = me_HOPITse;
+    cOut.v_hopit = v_hOPIT;
+    cOut.l_hopit = l_HOPIT;
+    cOut.ic_hopit = ic_HOPIT;
+    cOut.p_hopit = p_HOPIT;
+    cOut.y_star_hopit = y_star_HOPIT;
+    cOut.ic_all = ic_ALL;
+    cOut.ic_hopits = ic_HOPITS;
+    cOut.lm_test = lm_test;
+    cOut.phat = phat;
+    retp(cOut);
+endp;
+
+
+/* ORDERED PROBIT MODEL */
+proc ORDERED_MLE(struct PV p, struct DS d, capJ, ind);
+    local x, k, d_ij, beta_Y, mu, xbeta, p_ij;
+    local mu_mat, mu_xbeta;
+    local grad_beta, grad_betaJ, grad_mu, grad_muJ, grad_mu1, grad_mu2, grad_mu3, grad_mu4, L_i;
+    
+    
+    struct modelResults mm;
+    
+    /* DEFINE PARAMETERS */
+    
+    beta_Y  = pvUnpack(p,"beta_Y");
+    mu      = pvUnpack(p,"mu");
+    
+    
+    /* DEFINE DATA */
+    
+    d_ij	= d[1].dataMatrix;
+    x 		= d[2].dataMatrix;
+    
+    
+    /* DETERMINISTIC PART & PROBABILITIES */
+    
+    xbeta 	= x*beta_Y;
+    mu_mat	= mu' .* ones(rows(d_ij), capJ-1);
+    
+    mu_xbeta	= mu_mat - (xbeta .*. ones(1, capJ-1));
+    p_ij		= cdfn(mu_xbeta);
+    p_ij		= p_ij[., 1]~(p_ij[., 2:cols(p_ij)] - p_ij[., 1:cols(p_ij)-1]);
+    
+    p_ij		= p_ij~(1-sumr(p_ij));
+    
+    L_i         = (sumr(d_ij .* p_ij));
+    L_i         = L_i + ((L_i .lt (1e-8)) .* (1e-8));
+    
+    mm.Function = ln(L_i);
+    
+    if ind[2];
+        
+        /* beta_Y derivatives */
+        
+        grad_beta = _grad_beta_OP(mu_xbeta, d_ij, p_ij, x, capJ);
+        
+        /* mu derivatives */
+        
+        grad_mu = _grad_mu_OP(mu_xbeta, d_ij, p_ij, capJ);
+        
+        mm.Gradient 	= grad_beta~grad_mu;
+        
+    endif;
+    
+    
+    retp(mm);
+endp;
+
+/* HOPIT/VIGNETTES MODEL */
+
+proc HOPIT_MLE(struct PV p, struct DS d, struct Vstruct Vctl, exp_mu, kv, kx_mu, sig_restrict, capJ,  ind);
+    local X_struct, X_mu, V_x, jrep, d_ij, betaX, V_cons, sig_V_inv, gama, gama0, xbeta, zgama, p_ij;
+    local mu_ij, mu_ijV, mu_mat, mu_xbeta, lnLiHOPIT;
+    local mu_xbetaV1, p_ijV1, lnLiV1, mu_xbetaV2, p_ijV2, lnLiV2, mu_xbetaV3, p_ijV3, lnLiV3, mu_xbetaV4, p_ijV4, lnLiV4, mu_xbetaV5, p_ijV5, lnLiV5;
+    local LnLiV, sum_check, sum_check1, sum_check2, sum_check3;
+    local grad_beta, grad_V_con, grad_V_con1, grad_V_con2, grad_V_con3, grad_g1V1, grad_g1V2, grad_g1V3, grad_g2V1, grad_g2V2, grad_g2V3;
+    local grad_theta, grad_theta_V1, grad_theta_V2, grad_theta_V3, grad_g3V1, grad_g3V2, grad_g3V3, grad_g4V1, grad_g4V2, grad_g4V3;
+    local grad_g1, grad_g2, grad_g3, grad_g4, grad_betaJ;
+    local grad_g1a, grad_g1b, grad_g1V1a, grad_g1V1b, grad_g1V2a, grad_g1V2b, grad_g1V3a, grad_g1V3b;
+    local grad_g2a, grad_g2b, grad_g2V1a, grad_g2V1b, grad_g2V2a, grad_g2V2b, grad_g2V3a, grad_g2V3b;
+    local grad_g3a, grad_g3b, grad_g3V1a, grad_g3V1b, grad_g3V2a, grad_g3V2b, grad_g3V3a, grad_g3V3b;
+    local grad_g4a, grad_g4b, grad_g4V1a, grad_g4V1b, grad_g4V2a, grad_g4V2b, grad_g4V3a, grad_g4V3b;
+    
+    clear lnLiV1, lnLiV2, lnLiV3, lnLiV4, lnLiV5;
+    
+    struct modelResults mm;
+    
+    /* DEFINE PARAMETERS */
+    
+    betaX    	= pvUnpack(p,"beta_Y");
+    V_cons		= pvUnpack(p,"V_cons");
+    gama		= pvUnpack(p,"gama");
+    gama0		= pvUnpack(p,"gama0")';
+    gama        = (0~gama0)|gama;
+    gama	    = gama';
+    
+    if sig_restrict eq 0;
+        sig_V_inv	= pvUnpack(p, "sig_V_inv");
+    else;
+        sig_V_inv	= 1;
+    endif;
+    
+    /* DEFINE DATA */
+    
+    d_ij		= d[1].dataMatrix;
+    X_struct 	= d[2].dataMatrix;
+    X_mu		= d[3].dataMatrix;
+    
+    
+    V_x			= X_mu;
+    VCtl.v_ij1		= d[4].dataMatrix;
+    
+    if kv ge 2;
+        VCtl.v_ij2		= d[5].dataMatrix;
+        if kv ge 3;
+            VCtl.v_ij3	= d[6].dataMatrix;
+        endif;
+    endif;
+    
+    /* DEFINE COMMON BOUNDARY PARAMETERS */
+    
+    if exp_mu eq 1;
+        
+        mu_ij	= _mu_ij(X_mu*gama, capJ, exp_mu);
+        mu_ijV	= _mu_ij(V_x*gama, capJ, exp_mu);
+        
+    elseif exp_mu eq 0;
+        
+        mu_ij	= X_mu*gama;
+        mu_ijV	= V_x*gama;
+        
+    endif;
+    
+    /* HOPIT FOR THE VIGNETTES */
+    
+    mu_xbetaV1	= (mu_ijV - V_cons[1]) .* sig_V_inv;
+    p_ijV1		= cdfn(mu_xbetaV1);
+    p_ijV1		= p_ijV1[.,1]~(p_ijV1[.,2:cols(p_ijV1)] - p_ijV1[.,1:cols(p_ijV1)-1]);
+    p_ijV1		= p_ijV1~(1-sumr(p_ijV1));
+    
+    lnLiV1   = (sumr(VCtl.v_ij1 .* p_ijV1));
+    lnLiV1   = ln(lnLiV1);
+    
+    if maxc(maxc(p_ijV1)) .gt 1;
+        
+        "P>=1 V1 stop";
+        maxc(p_ijV1)';
+        ?;
+        sig_V_inv;
+        ?;
+        meanc(mu_ij)';
+        stop;
+        
+    endif;
+    
+    if flt(minc(vec(p_ijV1)), 0);
+        "minc(vec(p_ijV1))";;
+        minc(vec(p_ijV1));
+        stop;
+    endif;
+    
+    if kv ge 2;
+        
+        mu_xbetaV2	= (mu_ijV - V_cons[2]) .* sig_V_inv;
+        p_ijV2		= cdfn(mu_xbetaV2);
+        p_ijV2		= p_ijV2[.,1]~(p_ijV2[.,2:cols(p_ijV2)] - p_ijV2[.,1:cols(p_ijV2)-1]);
+        p_ijV2		= p_ijV2~(1-sumr(p_ijV2));
+        
+        lnLiV2   = (sumr(VCtl.v_ij2 .* p_ijV2));
+        lnLiV2   = ln(lnLiV2);
+        
+        if maxc(maxc(p_ijV2)) .gt 1;
+            "P>=1 V2 stop";
+            maxc(p_ijV2)';
+            stop;
+        endif;
+        
+        if flt(minc(vec(p_ijV2)), 0);
+            "minc(vec(p_ijV2))";;
+            minc(vec(p_ijV2));
+            stop;
+        endif;
+        
+        if kv ge 3;
+            
+            mu_xbetaV3	= (mu_ijV - V_cons[3]) .* sig_V_inv;
+            p_ijV3		= cdfn(mu_xbetaV3);
+            p_ijV3		= p_ijV3[., 1]~(p_ijV3[., 2:cols(p_ijV3)] - p_ijV3[., 1:cols(p_ijV3)-1]);
+            p_ijV3		= p_ijV3~(1-sumr(p_ijV3));
+            
+            lnLiV3   = (sumr(VCtl.v_ij3 .* p_ijV3));
+            lnLiV3   = lnLiV3 + ((lnLiV3 .lt (1e-8)) .* (1e-8));
+            lnLiV3   = ln(lnLiV3);
+            
+            if maxc(maxc(p_ijV3)) .gt 1;
+                "P>=1 V3 stop";
+                maxc(p_ijV3)';
+                stop;
+            endif;
+            
+            if flt(minc(vec(p_ijV3)), 0);
+                "minc(vec(p_ijV3))";;
+                minc(vec(p_ijV3));
+                stop;
+            endif;
+            
+        endif;
+        
+    endif;
+    
+    if kv eq 1;
+        LnLiV = (lnLiV1);
+    elseif kv eq 2;
+        LnLiV = (lnLiV1) + (lnLiV2);
+    elseif kv eq 3;
+        LnLiV = (lnLiV1) + (lnLiV2) + (lnLiV3);
+    endif;
+    
+    /* DETERMINISTIC PART & PROBABILITIES */
+    
+    xbeta 		= X_struct*betaX;
+    mu_xbeta	= mu_ij - (xbeta .*. ones(1, capJ-1));
+    p_ij		= cdfn(mu_xbeta);
+    p_ij		= p_ij[., 1]~(p_ij[., 2:cols(p_ij)] - p_ij[., 1:cols(p_ij)-1]);
+    p_ij		= p_ij~(1-sumr(p_ij));
+    
+    lnLiHOPIT   = (sumr(d_ij .* p_ij));
+    lnLiHOPIT   = lnLiHOPIT + ((lnLiHOPIT .lt (1e-8)) .* (1e-8));
+    lnLiHOPIT   = ln(lnLiHOPIT);
+    
+    if flt(minc(vec(p_ij)), 0);
+        "minc(vec(p_ij))";;
+        minc(vec(p_ij));
+        stop;
+    endif;
+    
+    if ind[1];
+        mm.Function = lnLiV + lnLiHOPIT;
+    endif;
+    
+    
+    if ind[2];
+        
+        /* beta_Y derivatives */
+        grad_beta = _grad_beta_OP(mu_xbeta, d_ij, p_ij, X_struct, capJ);
+        
+        
+        /*  vignette constants derivatives */
+        
+        if kv eq 1;
+            grad_V_con1 	= _grad_V_HOPIT(sig_V_inv, mu_xbetaV1, p_ijV1, VCtl.v_ij1, capJ);
+            grad_V_con      = grad_V_con1;
+        elseif kv eq 2;
+            grad_V_con1 	= _grad_V_HOPIT(sig_V_inv, mu_xbetaV1, p_ijV1, VCtl.v_ij1, capJ);
+            grad_V_con2 	= _grad_V_HOPIT(sig_V_inv, mu_xbetaV2, p_ijV2, VCtl.v_ij2, capJ);
+            grad_V_con      = grad_V_con1~grad_V_con2;
+        elseif kv eq 3;
+            grad_V_con1 	= _grad_V_HOPIT(sig_V_inv, mu_xbetaV1, p_ijV1, VCtl.v_ij1, capJ);
+            grad_V_con2 	= _grad_V_HOPIT(sig_V_inv, mu_xbetaV2, p_ijV2, VCtl.v_ij2, capJ);
+            grad_V_con3 	= _grad_V_HOPIT(sig_V_inv, mu_xbetaV3, p_ijV3, VCtl.v_ij3, capJ);
+            grad_V_con      = grad_V_con1~grad_V_con2~grad_V_con3;
+        endif;
+        
+        if exp_mu eq 1;
+            
+            /* gradient for gamma_1 HOPIT */
+            grad_g1		= _grad_g_j(gama[2:kx_mu,1], X_mu[.,2:cols(X_mu)], mu_xbeta, p_ij, d_ij, 1, exp_mu);
+            
+            /* gradient for gamma_1 V1 */
+            grad_g1V1		= _grad_g_j(gama[2:kx_mu,1], V_x[.,2:cols(V_x)], mu_xbetaV1, p_ijV1, VCtl.v_ij1, sig_V_inv, exp_mu);
+            
+            if kv ge 2;
+                
+                /* gradient for gamma_1 V2 */
+                grad_g1V2		= _grad_g_j(gama[2:kx_mu, 1], V_x[., 2:cols(V_x)], mu_xbetaV2, p_ijV2, VCtl.v_ij2, sig_V_inv, exp_mu);
+                
+            endif;
+            
+            if kv ge 3;
+                
+                /* gradient for gamma_1 V3 */
+                
+                grad_g1V3		= _grad_g_j(gama[2:kx_mu, 1], V_x[., 2:cols(V_x)], mu_xbetaV3, p_ijV3, VCtl.v_ij3, sig_V_inv, exp_mu);
+                
+            endif;
+            
+            if kv eq 1;
+                grad_g1 	= grad_g1 + grad_g1V1;
+            elseif kv eq 2;
+                grad_g1 	= grad_g1 + grad_g1V1 + grad_g1V2;
+            elseif kv eq 3;
+                grad_g1 	= grad_g1 + grad_g1V1 + grad_g1V2 + grad_g1V3;
+            endif;
+            
+            if capJ gt 3;
+                
+                /* gradient for gamma_2 HOPIT */
+                grad_g2		= _grad_g_j(gama[., 2], X_mu, mu_xbeta[., 2:cols(mu_xbeta)], p_ij[., 2:capJ], d_ij[., 2:capJ], 1, exp_mu);
+                
+                /* gradient for gamma_2 V1 */
+                grad_g2V1		= _grad_g_j(gama[., 2], V_x, mu_xbetaV1[., 2:cols(mu_xbetaV1)], p_ijV1[., 2:capJ], VCtl.v_ij1[., 2:capJ], sig_V_inv, exp_mu);
+                
+                if kv ge 2;
+                    
+                    /* gradient for gamma_2 V2 */
+                    grad_g2V2		= _grad_g_j(gama[., 2], V_x, mu_xbetaV2[., 2:cols(mu_xbetaV2)], p_ijV2[., 2:capJ], VCtl.v_ij2[., 2:capJ], sig_V_inv, exp_mu);
+                    
+                endif;
+                
+                if kv ge 3;
+                    
+                    /* gradient for gamma_2 V3 */
+                    grad_g2V3		= _grad_g_j(gama[., 2], V_x, mu_xbetaV3[., 2:cols(mu_xbetaV3)], p_ijV3[., 2:capJ], VCtl.v_ij3[., 2:capJ], sig_V_inv, exp_mu);
+                    
+                endif;
+                
+            elseif capJ eq 3;
+                
+                grad_g2		= _grad_gJ(gama[., 2], X_mu, mu_xbeta[., cols(mu_xbeta)], p_ij[., 2:capJ], d_ij[., 2:capJ], 1);
+                
+                /* gradient for gamma_2 V1 */
+                grad_g2V1		= _grad_gJ(gama[., 2], V_x, mu_xbetaV1[., cols(mu_xbetaV1)], p_ijV1[., 2:capJ], VCtl.v_ij1[., 2:capJ], sig_V_inv);
+                
+                if kv ge 2;
+                    
+                    /* gradient for gamma_2 V2 */
+                    grad_g2V2		= _grad_gJ(gama[., 2], V_x, mu_xbetaV2[., cols(mu_xbetaV2)], p_ijV2[., 2:capJ], VCtl.v_ij2[., 2:capJ], sig_V_inv);
+                    
+                endif;
+                
+                if kv ge 3;
+                    
+                    /* gradient for gamma_2 V3 */
+                    
+                    grad_g2V3	= _grad_gJ(gama[., 2], V_x, mu_xbetaV3[., cols(mu_xbetaV3)], p_ijV3[., 2:capJ], VCtl.v_ij3[., 2:capJ], sig_V_inv);
+                    
+                endif;
+                
+            endif;
+            
+            if kv eq 1;
+                grad_g2 	= grad_g2 + grad_g2V1;
+            elseif kv eq 2;
+                grad_g2 	= grad_g2 + grad_g2V1 + grad_g2V2;
+            elseif kv eq 3;
+                grad_g2 	= grad_g2 + grad_g2V1 + grad_g2V2 + grad_g2V3;
+            endif;
+            
+            if capJ ge 5;
+                
+                /* gradient for gamma_3 HOPIT */
+                grad_g3		= _grad_g_j(gama[., 3], X_mu, mu_xbeta[., 3:cols(mu_xbeta)], p_ij[., 3:capJ], d_ij[., 3:capJ], 1, exp_mu);
+                
+                /* gradient for gamma_3 V1 */
+                grad_g3V1		= _grad_g_j(gama[., 3], V_x, mu_xbetaV1[., 3:cols(mu_xbetaV1)], p_ijV1[., 3:capJ], VCtl.v_ij1[., 3:capJ], sig_V_inv, exp_mu);
+                
+                if kv ge 2;
+                    
+                    /* gradient for gamma_3 V2 */
+                    
+                    grad_g3V2		= _grad_g_j(gama[.,3],V_x,mu_xbetaV2[.,3:cols(mu_xbetaV2)],p_ijV2[.,3:capJ],VCtl.v_ij2[.,3:capJ], sig_V_inv, exp_mu);
+                    
+                endif;
+                
+                if kv ge 3;
+                    
+                    /* gradient for gamma_3 V3 */
+                    
+                    grad_g3V3	= _grad_g_j(gama[.,3],V_x,mu_xbetaV3[.,3:cols(mu_xbetaV3)],p_ijV3[.,3:capJ],VCtl.v_ij3[.,3:capJ],sig_V_inv, exp_mu);
+                    
+                endif;
+                
+            elseif capJ eq 4;
+                
+                grad_g3		= _grad_gJ(gama[.,3],X_mu,mu_xbeta[.,cols(mu_xbeta)],p_ij[.,3:capJ],d_ij[.,3:capJ],1);
+                
+                /* gradient for gamma_3 V1 */
+                
+                grad_g3V1		= _grad_gJ(gama[.,3],V_x,mu_xbetaV1[.,cols(mu_xbetaV1)],p_ijV1[.,3:capJ],VCtl.v_ij1[.,3:capJ],sig_V_inv);
+                
+                if kv ge 2;
+                    
+                    /* gradient for gamma_3 V2 */
+                    
+                    grad_g3V2		= _grad_gJ(gama[.,3],V_x,mu_xbetaV2[.,cols(mu_xbetaV2)],p_ijV2[.,3:capJ],VCtl.v_ij2[.,3:capJ],sig_V_inv);
+                    
+                endif;
+                
+                if kv ge 3;
+                    
+                    /* gradient for gamma_3 V3 */
+                    
+                    {grad_g3V3}		= _grad_gJ(gama[.,3],V_x,mu_xbetaV3[.,cols(mu_xbetaV3)],p_ijV3[.,3:capJ],VCtl.v_ij3[.,3:capJ],sig_V_inv);
+                    
+                endif;
+                
+            endif;
+            
+            if capJ gt 3;
+                
+                if kv eq 1;
+                    grad_g3 		= grad_g3 + grad_g3V1;
+                elseif kv eq 2;
+                    grad_g3 		= grad_g3 + grad_g3V1 + grad_g3V2;
+                elseif kv eq 3;
+                    grad_g3 		= grad_g3 + grad_g3V1 + grad_g3V2 + grad_g3V3;
+                endif;
+                
+            endif;
+            
+            if capJ ge 5;
+                
+                /* gradient for gamma_4 HOPIT */
+                
+                {grad_g4}		= _grad_gJ(gama[.,4],X_mu,mu_xbeta[.,cols(mu_xbeta)],p_ij[.,4:capJ],d_ij[.,4:capJ],1);
+                
+                /* gradient for gamma_4 V1 */
+                
+                {grad_g4V1}		= _grad_gJ(gama[.,4],V_x,mu_xbetaV1[.,cols(mu_xbetaV1)],p_ijV1[.,4:capJ],VCtl.v_ij1[.,4:capJ],sig_V_inv);
+                
+                if kv ge 2;
+                    
+                    /* gradient for gamma_4 V2 */
+                    
+                    {grad_g4V2}		= _grad_gJ(gama[.,4],V_x,mu_xbetaV2[.,cols(mu_xbetaV2)],p_ijV2[.,4:capJ],VCtl.v_ij2[.,4:capJ],sig_V_inv);
+                    
+                endif;
+                
+                if kv ge 3;
+                    
+                    /* gradient for gamma_4 V3 */
+                    
+                    {grad_g4V3}		= _grad_gJ(gama[.,4],V_x,mu_xbetaV3[.,cols(mu_xbetaV3)],p_ijV3[.,4:capJ],VCtl.v_ij3[.,4:capJ],sig_V_inv);
+                    
+                endif;
+                
+                if kv eq 1;
+                    grad_g4 		= grad_g4 + grad_g4V1;
+                elseif kv eq 2;
+                    grad_g4 		= grad_g4 + grad_g4V1 + grad_g4V2;
+                elseif kv eq 3;
+                    grad_g4 		= grad_g4 + grad_g4V1 + grad_g4V2 + grad_g4V3;
+                endif;
+                
+            endif;
+            
+        elseif exp_mu eq 0;
+            
+            /* gradient for gamma_1 HOPIT */
+            
+            {grad_g1a}		= _grad_g_j_linear(X_mu[.,2:kx_mu],mu_xbeta[.,1],p_ij[.,1],d_ij[.,1],1);
+            {grad_g1b}		= _grad_g_j_linear(X_mu[.,2:kx_mu],mu_xbeta[.,1],p_ij[.,2],d_ij[.,2],1);
+            grad_g1			= grad_g1a - grad_g1b;
+            
+            /* gradient for gamma_1 V1 */
+            
+            {grad_g1V1a}		= _grad_g_j_linear(V_x[.,2:kx_mu],mu_xbetaV1[.,1],p_ijV1[.,1],VCtl.v_ij1[.,1],sig_V_inv);
+            {grad_g1V1b}		= _grad_g_j_linear(V_x[.,2:kx_mu],mu_xbetaV1[.,1],p_ijV1[.,2],VCtl.v_ij1[.,2],sig_V_inv);
+            grad_g1V1			= grad_g1V1a - grad_g1V1b;
+            
+            if kv ge 2;
+                
+                /* gradient for gamma_1 V2 */
+                
+                {grad_g1V2a}		= _grad_g_j_linear(V_x[.,2:kx_mu],mu_xbetaV2[.,1],p_ijV2[.,1],VCtl.v_ij2[.,1],sig_V_inv);
+                {grad_g1V2b}		= _grad_g_j_linear(V_x[.,2:kx_mu],mu_xbetaV2[.,1],p_ijV2[.,2],VCtl.v_ij2[.,2],sig_V_inv);
+                grad_g1V2			= grad_g1V2a - grad_g1V2b;
+                
+            endif;
+            
+            if kv ge 3;
+                
+                /* gradient for gamma_1 V3 */
+                
+                {grad_g1V3a}		= _grad_g_j_linear(V_x[.,2:kx_mu],mu_xbetaV3[.,1],p_ijV3[.,1],VCtl.v_ij3[.,1],sig_V_inv);
+                {grad_g1V3b}		= _grad_g_j_linear(V_x[.,2:kx_mu],mu_xbetaV3[.,1],p_ijV3[.,2],VCtl.v_ij3[.,2],sig_V_inv);
+                grad_g1V3			= grad_g1V3a - grad_g1V3b;
+                
+            endif;
+            
+            if kv eq 1;
+                grad_g1 	= grad_g1 + grad_g1V1;
+            elseif kv eq 2;
+                grad_g1 	= grad_g1 + grad_g1V1 + grad_g1V2;
+            elseif kv eq 3;
+                grad_g1 	= grad_g1 + grad_g1V1 + grad_g1V2 + grad_g1V3;
+            endif;
+            
+            /* gradient for gamma_2 HOPIT */
+            
+            {grad_g2a}		= _grad_g_j_linear(X_mu,mu_xbeta[.,2],p_ij[.,2],d_ij[.,2],1);
+            {grad_g2b}		= _grad_g_j_linear(X_mu,mu_xbeta[.,2],p_ij[.,3],d_ij[.,3],1);
+            grad_g2			= grad_g2a - grad_g2b;
+            
+            /* gradient for gamma_2 V1 */
+            
+            {grad_g2V1a}		= _grad_g_j_linear(V_x,mu_xbetaV1[.,2],p_ijV1[.,2],VCtl.v_ij1[.,2],sig_V_inv);
+            {grad_g2V1b}		= _grad_g_j_linear(V_x,mu_xbetaV1[.,2],p_ijV1[.,3],VCtl.v_ij1[.,3],sig_V_inv);
+            grad_g2V1			= grad_g2V1a - grad_g2V1b;
+            
+            if kv ge 2;
+                
+                /* gradient for gamma_2 V2 */
+                
+                {grad_g2V2a}		= _grad_g_j_linear(V_x,mu_xbetaV2[.,2],p_ijV2[.,2],VCtl.v_ij2[.,2],sig_V_inv);
+                {grad_g2V2b}		= _grad_g_j_linear(V_x,mu_xbetaV2[.,2],p_ijV2[.,3],VCtl.v_ij2[.,3],sig_V_inv);
+                grad_g2V2			= grad_g2V2a - grad_g2V2b;
+                
+            endif;
+            
+            if kv ge 3;
+                
+                /* gradient for gamma_2 V3 */
+                
+                {grad_g2V3a}		= _grad_g_j_linear(V_x,mu_xbetaV3[.,2],p_ijV3[.,2],VCtl.v_ij3[.,2],sig_V_inv);
+                {grad_g2V3b}		= _grad_g_j_linear(V_x,mu_xbetaV3[.,2],p_ijV3[.,3],VCtl.v_ij3[.,3],sig_V_inv);
+                grad_g2V3			= grad_g2V3a - grad_g2V3b;
+                
+            endif;
+            
+            if kv eq 1;
+                grad_g2 	= grad_g2 + grad_g2V1;
+            elseif kv eq 2;
+                grad_g2 	= grad_g2 + grad_g2V1 + grad_g2V2;
+            elseif kv eq 3;
+                grad_g2 	= grad_g2 + grad_g2V1 + grad_g2V2 + grad_g2V3;
+            endif;
+            
+            /* gradient for gamma_3 HOPIT */
+            
+            if capJ gt 3;
+                
+                {grad_g3a}		= _grad_g_j_linear(X_mu,mu_xbeta[.,3],p_ij[.,3],d_ij[.,3],1);
+                {grad_g3b}		= _grad_g_j_linear(X_mu,mu_xbeta[.,3],p_ij[.,4],d_ij[.,4],1);
+                grad_g3			= grad_g3a - grad_g3b;
+                
+                /* gradient for gamma_3 V1 */
+                
+                {grad_g3V1a}		= _grad_g_j_linear(V_x,mu_xbetaV1[.,3],p_ijV1[.,3],VCtl.v_ij1[.,3],sig_V_inv);
+                {grad_g3V1b}		= _grad_g_j_linear(V_x,mu_xbetaV1[.,3],p_ijV1[.,4],VCtl.v_ij1[.,4],sig_V_inv);
+                grad_g3V1			= grad_g3V1a - grad_g3V1b;
+                
+                if kv ge 2;
+                    
+                    /* gradient for gamma_3 V2 */
+                    
+                    {grad_g3V2a}		= _grad_g_j_linear(V_x,mu_xbetaV2[.,3],p_ijV2[.,3],VCtl.v_ij2[.,3],sig_V_inv);
+                    {grad_g3V2b}		= _grad_g_j_linear(V_x,mu_xbetaV2[.,3],p_ijV2[.,4],VCtl.v_ij2[.,4],sig_V_inv);
+                    grad_g3V2			= grad_g3V2a - grad_g3V2b;
+                    
+                endif;
+                
+                if kv ge 3;
+                    
+                    /* gradient for gamma_3 V3 */
+                    
+                    {grad_g3V3a}		= _grad_g_j_linear(V_x,mu_xbetaV3[.,3],p_ijV3[.,3],VCtl.v_ij3[.,3],sig_V_inv);
+                    {grad_g3V3b}		= _grad_g_j_linear(V_x,mu_xbetaV3[.,3],p_ijV3[.,4],VCtl.v_ij3[.,4],sig_V_inv);
+                    grad_g3V3			= grad_g3V3a - grad_g3V3b;
+                    
+                endif;
+                
+                if kv eq 1;
+                    grad_g3 	= grad_g3 + grad_g3V1;
+                elseif kv eq 2;
+                    grad_g3 	= grad_g3 + grad_g3V1 + grad_g3V2;
+                elseif kv eq 3;
+                    grad_g3 	= grad_g3 + grad_g3V1 + grad_g3V2 + grad_g3V3;
+                endif;
+                
+            endif;
+            
+            if capJ ge 5;
+                
+                /* gradient for gamma_4 HOPIT */
+                grad_g4a		= _grad_g_j_linear(X_mu,mu_xbeta[.,4],p_ij[.,4],d_ij[.,4],1);
+                grad_g4b		= _grad_g_j_linearJ(X_mu,mu_xbeta[.,4],p_ij[.,5],d_ij[.,5],1);
+                grad_g4			= grad_g4a - grad_g4b;
+                
+                /* gradient for gamma_4 V1 */
+                grad_g4V1a	= _grad_g_j_linear(V_x,mu_xbetaV1[.,4],p_ijV1[.,4],VCtl.v_ij1[.,4],sig_V_inv);
+                grad_g4V1b	= _grad_g_j_linearJ(V_x,mu_xbetaV1[.,4],p_ijV1[.,5],VCtl.v_ij1[.,5],sig_V_inv);
+                grad_g4V1		= grad_g4V1a - grad_g4V1b;
+                
+                if kv ge 2;
+                    
+                    /* gradient for gamma_4 V2 */
+                    {grad_g4V2a}	= _grad_g_j_linear(V_x,mu_xbetaV2[.,4],p_ijV2[.,4],VCtl.v_ij2[.,4],sig_V_inv);
+                    {grad_g4V2b}	= _grad_g_j_linearJ(V_x,mu_xbetaV2[.,4],p_ijV2[.,5],VCtl.v_ij2[.,5],sig_V_inv);
+                    grad_g4V2		= grad_g4V2a - grad_g4V2b;
+                    
+                endif;
+                
+                if kv eq 3;
+                    
+                    /* gradient for gamma_4 V3 */
+                    grad_g4V3a		= _grad_g_j_linear(V_x, mu_xbetaV3[., 4], p_ijV3[., 4], VCtl.v_ij3[., 4], sig_V_inv);
+                    grad_g4V3b		= _grad_g_j_linearJ(V_x, mu_xbetaV3[., 4], p_ijV3[., 5], VCtl.v_ij3[., 5], sig_V_inv);
+                    grad_g4V3			= grad_g4V3a - grad_g4V3b;
+                    
+                endif;
+                
+                if kv eq 1;
+                    grad_g4 	= grad_g4 + grad_g4V1;
+                elseif kv eq 2;
+                    grad_g4 	= grad_g4 + grad_g4V1 + grad_g4V2;
+                elseif kv eq 3;
+                    grad_g4 	= grad_g4 + grad_g4V1 + grad_g4V2 + grad_g4V3;
+                endif;
+                
+            endif;
+            
+        endif;
+        
+        /* theta = 1/sigma derivatives; V1, V2 and V3 */
+        
+        if sig_restrict eq 0;
+            
+            if kv eq 1;
+                
+                grad_theta_V1	= _grad_theta_HOPIT(mu_xbetaV1,sig_V_inv,p_ijV1,VCtl.v_ij1, capJ);
+                grad_theta		= grad_theta_V1;
+                
+            elseif kv eq 2;
+                
+                {grad_theta_V1}	= _grad_theta_HOPIT(mu_xbetaV1,sig_V_inv,p_ijV1,VCtl.v_ij1, capJ);
+                {grad_theta_V2}	= _grad_theta_HOPIT(mu_xbetaV2,sig_V_inv,p_ijV2,VCtl.v_ij2, capJ);
+                grad_theta		= grad_theta_V1 + grad_theta_V2;
+                
+                
+            elseif kv eq 3;
+                
+                {grad_theta_V1}	= _grad_theta_HOPIT(mu_xbetaV1,sig_V_inv,p_ijV1,VCtl.v_ij1, capJ);
+                {grad_theta_V2}	= _grad_theta_HOPIT(mu_xbetaV2,sig_V_inv,p_ijV2,VCtl.v_ij2, capJ);
+                {grad_theta_V3}	= _grad_theta_HOPIT(mu_xbetaV3,sig_V_inv,p_ijV3,VCtl.v_ij3, capJ);
+                grad_theta		= grad_theta_V1 + grad_theta_V2 + grad_theta_V3;
+                
+            endif;
+            
+        endif;
+        
+        if sig_restrict eq 0;
+            
+            if capJ eq 5;
+                mm.Gradient 	= grad_beta~grad_V_con~grad_g1~grad_g2~grad_g3~grad_g4~grad_theta;
+            elseif capJ eq 4;
+                mm.Gradient 	= grad_beta~grad_V_con~grad_g1~grad_g2~grad_g3~grad_theta;
+            elseif capJ eq 3;
+                mm.Gradient 	= grad_beta~grad_V_con~grad_g1~grad_g2~grad_theta;
+            endif;
+            
+        else;
+            
+            if capJ eq 5;
+                mm.Gradient 	= grad_beta~grad_V_con~grad_g1~grad_g2~grad_g3~grad_g4;
+            elseif capJ eq 4;
+                mm.Gradient 	= grad_beta~grad_V_con~grad_g1~grad_g2~grad_g3;
+            elseif capJ eq 3;
+                mm.Gradient 	= grad_beta~grad_V_con~grad_g1~grad_g2;
+            endif;
+            
+        endif;
+        
+    endif;
+    
+    retp(mm);
+endp;
+
+/* PROBABILITY PROCEDURES FOR ME'S AND SE'S(ME'S) */
+
+/* USE GENERIC METHOD FOR ME'S AND SE'S */
+
+proc 4 = mes(vcov, gama, capJ, me_model, xbar, kx_all, kx_struct, kx_mu, kv, exp_mu);
+    local G_ME, G_P, me_ses, p1, p2, h, xbargama, mes, i, g, gp;
+    local prob, probability, prob_se, me0_np, me0_p, me0_se_np, me0_se_p;
+    local jloop, G_MEnp, G_MEp, G_Pnp, G_Pp, mes_np, mes_p, prob_np, prob_p;
+    local me_np_se, prob_np_se, me_p_se, prob_p_se, mark, jj;
+    
+    clearg k, kg, mtype_me;
+    
+    if rows(xbar) eq 1;
+        xbar = xbar';
+    endif;
+    
+    k  = rows(xbar);
+    kg = rows(gama);
+    
+    
+    /* STACK THE XBARS AND PARAMETERS*/
+    
+    xbargama = xbar|gama;
+    
+    /* WHICH MODEL? */
+    
+    let mtype_me = ordered hopit;
+    mtype_me = indcv(me_model,mtype_me);
+    
+    
+    /* INITIALISE MATRICES */
+    
+    G_ME    = zeros(1,rows(gama));
+    G_P     = zeros(1,rows(gama));
+    mes     = zeros(1,1);
+    prob	= zeros(1,1);
+    
+    G_MEnp  = zeros(1,rows(gama));
+    G_MEp   = zeros(1,rows(gama));
+    G_Pnp   = zeros(1,rows(gama));
+    G_Pp    = zeros(1,rows(gama));
+    
+    clear mes,me_ses,mes_np,mes_p,me_np_se,me_p_se,prob,prob_se;
+    
+    
+    /* CONSTRUCT P1 & P2 FOR EXTRACTING SECOND ORDER DERIVATIVES WRT PARAMETERS */
+    
+    p1=k+1;
+    
+    for i(rows(xbar)+2,rows(xbargama),1);
+        p1=p1|i;
+    endfor;
+    
+    p2=1;
+    
+    for i(2,rows(xbar),1);
+        p2=p2|i;
+    endfor;
+    
+    /* ESTIMATING MEs AND SEs*/
+    
+    if mtype_me eq 1;                              @ ORDERED PROBIT @
+        
+        jj          = 1;
+        
+        do while jj le capJ;
+            
+            h           = hessp(&ordp_p, xbargama, kx_all, kx_struct, kx_mu, kv, exp_mu, capJ, jj);
+            g           = gradp(&ordp_p, xbargama, kx_all, kx_struct, kx_mu, kv, exp_mu, capJ, jj);
+            probability = ordp_p(xbargama, kx_all, kx_struct, kx_mu, kv, exp_mu, capJ, jj);
+            gp          = gradp(&ordp_p, xbargama, kx_all, kx_struct, kx_mu, kv, exp_mu, capJ, jj);
+            
+            h           = submat(h,p1',p2')';
+            gp          = submat(gp',p1,0)';
+            
+            G_ME        = G_ME|h;
+            G_P         = G_P|gp;
+            mes         = mes|g[1:rows(xbar)]';
+            prob        = prob~probability';
+            
+            jj          = jj+1;
+            
+        endo;
+        
+        G_ME	    = G_ME[2:rows(G_ME),.];
+        G_P 	    = G_P[2:rows(G_P),.];
+        me_ses	    = G_ME*vcov*G_ME';
+        me_ses 	    = sqrt(diag(me_ses));
+        me_ses 	    = reshape(me_ses, capJ,k)';
+        mes         = mes[2:rows(mes)];
+        mes         = reshape(mes, capJ,k)';
+        
+        prob        = prob[.,2:cols(prob)];
+        prob_se	    = G_P*vcov*G_P';
+        prob_se  	= sqrt(diag(prob_se));
+        
+    elseif mtype_me eq 2;					@ HOPIT MODEL @
+        
+        jj          = 1;
+        
+        do while jj le capJ;
+            
+            h           = hessp(&HOPIT_p, xbargama, kx_all, kx_struct, kx_mu, kv, exp_mu, capJ, jj);
+            g           = gradp(&HOPIT_p, xbargama, kx_all, kx_struct, kx_mu, kv, exp_mu, capJ, jj);
+            probability = HOPIT_p(xbargama, kx_all, kx_struct, kx_mu, kv, exp_mu, capJ, jj);
+            gp          = gradp(&HOPIT_p, xbargama, kx_all, kx_struct, kx_mu, kv, exp_mu, capJ, jj);
+            
+            h           = submat(h,p1',p2')';
+            gp          = submat(gp',p1,0)';
+            
+            G_ME        = G_ME|h;
+            G_P         = G_P|gp;
+            mes         = mes|g[1:rows(xbar)]';
+            prob        = prob~probability';
+            
+            jj          = jj+1;
+            
+        endo;
+        
+        G_ME	    = G_ME[2:rows(G_ME),.];
+        G_P 	    = G_P[2:rows(G_P),.];
+        me_ses	    = G_ME*vcov*G_ME';
+        me_ses 	    = sqrt(diag(me_ses));
+        me_ses 	    = reshape(me_ses, capJ, k)';
+        mes         = mes[2:rows(mes)];
+        mes         = reshape(mes, capJ, k)';
+        
+        prob        = prob[.,2:cols(prob)];
+        prob_se	    = G_P*vcov*G_P';
+        prob_se  	= sqrt(diag(prob_se));
+        
+    endif;
+    
+    retp(mes,me_ses,
+        prob,prob_se);
+endp;
+
+
+/* CONSTRUCT ORDERED PROBIT PROBABILITIES */
+
+proc 1 = ordp_p(xbargama, kx_all, kx_struct, kx_mu, kv, exp_mu, capJ, jj);
+    local jrep, jrep2, beta_Y, mu, xbeta, mu_xbeta, p_ij, check, pord, gama, xbar;
+    
+    xbar        = xbargama[1:kx_struct-1];
+    gama        = xbargama[kx_struct:rows(xbargama)];
+    beta_Y		= gama[1:kx_struct-1];
+    mu		    = gama[kx_struct:rows(gama)];
+    
+    if rows(gama) ne (rows(beta_Y)+rows(mu));
+        "error in ordp_p(xbargama)";
+        stop;
+    endif;
+    
+    xbeta 		= xbar'*beta_Y;
+    
+    mu_xbeta	= mu' - (xbeta .*. ones(1, capJ-1));
+    p_ij		= cdfn(mu_xbeta);
+    p_ij		= p_ij[1]~(p_ij[2:cols(p_ij)] - p_ij[1:cols(p_ij)-1]);
+    
+    pord		= p_ij~(1-sumr(p_ij));
+    
+    check = meanc(sumc(pord'));
+    if check gt 1.0001 or check lt .9999;
+        errorlog "ERROR IN DEFINING ORDERED PROBIT PROBABILITIES; PROGRAM TERMINATED";
+        "mean probablitiy =";;
+        check;
+        stop;
+    endif;
+    
+    retp(pord[., jj]);
+endp;
+
+
+/* CONSTRUCT HOPIT PROBABILITIES */
+
+proc 1 = HOPIT_p(xbargama, kx_all, kx_struct, kx_mu, kv, exp_mu, capJ, jj);
+    local beta_Y, V_cons, sig_V, gama0, gama, xbar, params, X_struct, X_mu, zgama, mu_ij, phop, xbeta, mu_xbeta, p_ij;
+    
+    xbar	= xbargama[1:kx_all];
+    params  = xbargama[kx_all+1:rows(xbargama)];
+    beta_Y  = params[1:kx_struct];
+    gama    = 0|params[kx_struct+kv+1:kx_struct+kv+kx_mu-1+(kx_mu*(capJ-2))];
+    
+    X_struct	= xbar'; //selif(xbar,X_struct_vec')';
+    X_mu		= xbar'; //selif(xbar,X_mu_vec')';
+    
+    /* DEFINE COMMON BOUNDARY PARAMETERS */
+    
+    gama	= reshape(gama, capJ-1, kx_mu)';
+    zgama	= X_mu*gama;
+    if exp_mu eq 1;
+        mu_ij	= _mu_ij(zgama, capJ, exp_mu);
+    elseif exp_mu eq 0;
+        mu_ij	= zgama;
+    endif;
+    
+    /* DETERMINISTIC PART & PROBABILITIES */
+    
+    xbeta 		= X_struct*beta_Y;
+    mu_xbeta	= mu_ij - (xbeta .*. ones(1, capJ-1));
+    p_ij		= cdfn(mu_xbeta);
+    p_ij		= p_ij[.,1]~(p_ij[.,2:cols(p_ij)] - p_ij[.,1:cols(p_ij)-1]);
+    phop		= p_ij~(1-sumr(p_ij));
+    
+    retp(phop[., jj]);
+endp;
+
+
+/* PROCEDURE FOR PARAMETRISING THE BOUNDRAY POINTS */
+
+proc 1 = _mu_ij(zgama, capJ, exp_mu);
+    local mu_ij;
+    
+    if exp_mu eq 1;
+        
+        mu_ij	= exp(zgama[., 1]);
+        
+        for jrep (2, capJ-1, 1);
+            mu_ij	= mu_ij~((mu_ij[., jrep-1]) + exp(zgama[., jrep]));
+        endfor;
+        
+    elseif exp_mu eq 0;
+        
+        mu_ij	= zgama;
+        
+    endif;
+    
+    retp(mu_ij);
+endp;
+
+proc 1 = _IC(logL, N, k);
+    local BIC, AIC, CAIC, HQIC;
+    
+    BIC   = (-2*logL) + (ln(N)*k);
+    AIC   = (-2*logL) + (2*k);
+    CAIC  = (-2*logL) + ((1+ln(N))*k);
+    HQIC  = (-2*logL) + ((2*ln(ln(N)))*k);
+    
+    retp(BIC~AIC~CAIC~HQIC);
+endp;
+
+
+/* PROCEDURES FOR GRADIENTS */
+
+proc 1 = _grad_beta_OP(mu_xbeta, d_ij, p_ij, x, capJ);
+    local grad_beta, grad_betaJ;
+    
+    grad_beta		= pdfn(mu_xbeta);
+    grad_betaJ		= pdfn(mu_xbeta[., capJ-1] .* -1) .* -1;
+    grad_beta		= grad_beta[.,1]~(grad_beta[.,2:cols(grad_beta)] - grad_beta[.,1:cols(grad_beta)-1])~grad_betaJ;
+    grad_beta		= sumr(d_ij .* grad_beta);
+    grad_beta		= (grad_beta .*. ones(1,cols(x))) .* (-x);
+    grad_beta		= grad_beta ./ (sumr(d_ij .* p_ij) .*. ones(1,cols(x)));
+    
+    retp(grad_beta);
+endp;
+
+proc 1 = _grad_mu_OP(mu_xbeta, d_ij, p_ij, capJ);
+    local grad_mu1, grad_mu2, grad_mu3, grad_mu4, grad_mu;
+    
+    grad_mu1		= (pdfn(mu_xbeta[.,1]) .* d_ij[.,1]) ./ p_ij[.,1];
+    grad_mu1		= grad_mu1 + ((-pdfn(mu_xbeta[.,1]) .* d_ij[.,2]) ./ p_ij[.,2]);
+    
+    grad_mu2		= (pdfn(mu_xbeta[.,2]) .* d_ij[.,2]) ./ p_ij[.,2];
+    grad_mu2		= grad_mu2 + ((-pdfn(mu_xbeta[.,2]) .* d_ij[.,3]) ./ p_ij[.,3]);
+    
+    if capJ eq 5;
+        
+        grad_mu3		= (pdfn(mu_xbeta[.,3]) .* d_ij[.,3]) ./ p_ij[.,3];
+        grad_mu3		= grad_mu3 + ((-pdfn(mu_xbeta[.,3]) .* d_ij[.,4]) ./ p_ij[.,4]);
+        
+        grad_mu4		= (pdfn(mu_xbeta[.,4]) .* d_ij[.,4]) ./ p_ij[.,4];
+        grad_mu4		= grad_mu4 + ((-pdfn(mu_xbeta[.,4] .* -1) .* d_ij[.,5]) ./ p_ij[.,5]);
+        
+        grad_mu			= grad_mu1~grad_mu2~grad_mu3~grad_mu4;
+        
+    elseif capJ eq 4;
+        
+        grad_mu3		= (pdfn(mu_xbeta[.,3]) .* d_ij[.,3]) ./ p_ij[.,3];
+        grad_mu3		= grad_mu3 + ((-pdfn(mu_xbeta[.,3]) .* d_ij[.,4]) ./ p_ij[.,4]);
+        
+        grad_mu			= grad_mu1~grad_mu2~grad_mu3;
+        
+    elseif capJ eq 3;
+        
+        grad_mu			= grad_mu1~grad_mu2;
+        
+    endif;
+    
+    retp(grad_mu);
+endp;
+
+proc 1 = _grad_V_HOPIT(sig_V_inv,mu_xbetaV,p_ijV,V_ij, capJ);
+    local grad_V_con_1, grad_V_temp, grad_V_con_J, grad_V_con;
+    
+    grad_V_con_1	= -sig_V_inv .* pdfn(mu_xbetaV[.,1]);
+    grad_V_temp		= -sig_V_inv .* (pdfn(mu_xbetaV[.,2:capJ-1]) - pdfn(mu_xbetaV[.,1:capJ-2]));
+    grad_V_con_J	= sig_V_inv .* pdfn(mu_xbetaV[., capJ-1] .* -1);
+    grad_V_con		= grad_V_con_1~grad_V_temp~grad_V_con_J;
+    grad_V_con		= sumr((grad_V_con ./ p_ijV) .* V_ij);
+    
+    retp(grad_V_con);
+endp;
+
+proc 1 = _grad_theta_HOPIT(mu_xbetaV,sig_V_inv,p_ijV,V_ij, capJ);
+    local grad_theta_V_1, grad_theta_temp, grad_theta_V_J, grad_theta_V;
+    
+    grad_theta_V_1	= (mu_xbetaV[.,1] ./ sig_V_inv) .* pdfn(mu_xbetaV[.,1]);
+    grad_theta_temp	= ((mu_xbetaV[.,2:capJ-1] ./ sig_V_inv) .* pdfn(mu_xbetaV[.,2:capJ-1])) -
+        ((mu_xbetaV[.,1:capJ-2] ./ sig_V_inv) .* pdfn(mu_xbetaV[.,1:capJ-2]));
+    grad_theta_V_J	= ((mu_xbetaV[., capJ-1] ./ sig_V_inv) .* -1) .* pdfn(mu_xbetaV[., capJ-1] .* -1);
+    grad_theta_V	= grad_theta_V_1~grad_theta_temp~grad_theta_V_J;
+    grad_theta_V	= sumr((grad_theta_V ./ p_ijV) .* V_ij);
+    
+    retp(grad_theta_V);
+endp;
+
+
+proc 1 = _grad_g_j(gama, z, mu_xbeta, p_ij, d_ij, sig_V_inv, exp_mu);
+    local j1, j_mid, J, j_all, grad_g, grad_gV1, grad_gV2, grad_gV3, sel, j_rep;
+    
+    j1			= pdfn(mu_xbeta[.,1]);
+    j_mid		= pdfn(mu_xbeta[.,2:cols(mu_xbeta)]) - pdfn(mu_xbeta[.,1:cols(mu_xbeta)-1]);
+    J			= (pdfn(mu_xbeta[.,cols(mu_xbeta)] .* -1)) .* -1;
+    j_all		= (j1~j_mid~J) .* sig_V_inv;
+    
+    if exp_mu eq 1;
+        
+        j_all		= (j_all .* (exp(z*gama) .*. ones(1,cols(p_ij)))) ./ p_ij;
+        grad_g		= sumr(j_all .* d_ij);
+        grad_g		= (grad_g .*. ones(1,cols(z))) .* z;
+        
+    elseif exp_mu eq 0;
+        
+        j_all		= (j_all ./ p_ij) .* d_ij;
+        grad_g		= sumr(j_all) .* z;
+        
+    endif;
+    
+    retp(grad_g);
+endp;
+
+proc 1 = _grad_g_j_linear(Z,mu_xbeta,p_ij,d_ij,sig_V_inv);
+    local j, j_mid, j_all, grad_g, grad_gV1, grad_gV2, grad_gV3, sel, j_rep;
+    
+    j_all		= pdfn(mu_xbeta) .* sig_V_inv;
+    j_all		= sumr((j_all ./ p_ij) .* d_ij);
+    grad_g		= sumr(j_all) .* Z;
+    
+    retp(grad_g);
+endp;
+
+proc 1 = _grad_g_j_linearJ(x,mu_xbeta,p_ij,d_ij,sig_V_inv);
+    local j, j_mid, j_all, grad_g, grad_gV1, grad_gV2, grad_gV3, sel, j_rep;
+    
+    j_all		= pdfn(mu_xbeta .* -1) .* sig_V_inv;
+    j_all		= sumr((j_all ./ p_ij) .* d_ij);
+    grad_g		= sumr(j_all) .* x;
+    
+    retp(grad_g);
+endp;
+
+proc 1 = _grad_gJ(gama, x, mu_xbeta, p_ij, d_ij, sig_V_inv);
+    local j1, j_all, J, grad_g;
+    
+    j1			= pdfn(mu_xbeta);
+    J			= (pdfn(mu_xbeta .* -1)) .* -1;
+    j_all		= (j1~J) .* sig_V_inv;
+    j_all		= (j_all .* (exp(x*gama) .*. ones(1,cols(p_ij)))) ./ p_ij;
+    
+    grad_g		= sumr(j_all .* d_ij);
+    grad_g		= (grad_g .*. ones(1,cols(x))) .* x;
+    
+    retp(grad_g);
+endp;

@@ -1,0 +1,311 @@
+#include chopit.sdf;
+proc (3) = _getindicatorVariable(y, capJ, kv, V, N);
+    local V1, V2, V3, V4, V5,
+        d_ij, v_ij1, v_ij2, v_ij3, v_ij4, v_ij5,
+        phat;
+    
+    // Create empty storage matrices
+    v_ij1 = {};
+    v_ij2 = {};
+    v_ij3 = {};
+    v_ij4 = {};
+    v_ij5 = {};
+    
+    V1		= V[., 1] - minc(V[., 1]);
+    if kv ge 2;
+        V2		= V[., 2] - minc(V[., 2]);
+    endif;
+    if kv ge 3;
+        V3		= V[., 3] - minc(V[., 3]);
+    endif;
+    if kv ge 4;
+        V4		= V[., 4] - minc(V[., 4]);
+    endif;
+    if kv ge 5;
+        V5		= V[., 5] - minc(V[., 5]);
+    endif;
+    
+    d_ij = zeros(N, 1);
+    
+    for jrep (0, capJ-1, 1);
+        d_ij = d_ij~(y .eq jrep);
+    endfor;
+    
+    d_ij = d_ij[.,2:capJ+1];
+    phat = meanc(d_ij);
+    
+    for jrep (minc(V1), maxc(V1), 1);
+        v_ij1 = v_ij1~(V1 .eq jrep);
+    endfor;
+    
+    if kv ge 2;
+        
+        for jrep (minc(V2), maxc(V2), 1);
+            v_ij2 = v_ij2~(V2 .eq jrep);
+        endfor;
+        
+    endif;
+    
+    if kv ge 3;
+        
+        for jrep (minc(V3), maxc(V3), 1);
+            v_ij3 = v_ij3~(V3 .eq jrep);
+        endfor;
+        
+    endif;
+    
+    if kv ge 4;
+        
+        for jrep (minc(V4), maxc(V4), 1);
+            v_ij4 = v_ij4~(V4 .eq jrep);
+        endfor;
+        
+    endif;
+    
+    if kv ge 5;
+        
+        for jrep (minc(V5), maxc(V5), 1);
+            v_ij5 = v_ij5~(V5 .eq jrep);
+        endfor;
+        
+    endif;
+    
+    struct Vstruct vCtl;
+    vCtl.v_ij1 = v_ij1;
+    vCtl.v_ij2 = v_ij2;
+    vCtl.v_ij3 = v_ij3;
+    vCtl.v_ij4 = v_ij4;
+    vCtl.v_ij5 = v_ij5;
+    
+    retp(d_ij, vCtl, phat);
+endp;
+
+proc (2) = _getOPStartValues(ols_b, d_ij, start_OP, kx_struct, capJ);
+    local mu_temp, startmu1, startmu, beta_Y;
+    
+    // Estimate ordered probit
+    if rows(start_OP) eq 1;
+        
+        startmu1    = meanc(d_ij);
+        startmu     = startmu1[1];
+        
+        for startrep (2,capJ-1,1);
+            mu_temp = ((startmu[startrep-1] + startmu1[startrep]));
+            startmu  = startmu|mu_temp;
+        endfor;
+        
+        startmu 	= cdfn(startmu);
+        
+        beta_Y  		= OLS_B[2:rows(OLS_B),1];
+        
+    else;
+        
+        beta_Y  	= start_OP[1:kx_struct-1];
+        startmu     = start_OP[kx_struct:rows(start_OP)];
+        
+    endif;
+    
+    retp(beta_Y, startmu);
+endp;
+
+proc (3) = _getOPCMLStructures(struct chopitControl cCtl, beta_Y, startmu, d_ij, X_struct);
+    local c;
+    
+    struct PV pORDERED;
+    pORDERED = pvCreate;
+    pORDERED = pvPack(pORDERED, beta_Y, "beta_Y");
+    pORDERED = pvPack(pORDERED, startmu, "mu");
+    
+    struct DS dORDERED;
+    dORDERED = reshape(dsCreate, 2, 1);
+    dORDERED[1].DataMatrix = d_ij;
+    dORDERED[2].DataMatrix = X_struct[., 2:cols(X_struct)];
+    
+    struct cmlmtControl cORDERED;
+    cORDERED        = cmlmtControlCreate;
+    cORDERED.title  = "Ordered Probit Model";
+    
+    c           = ((eye(cCtl.capJ-2) .*-1)~zeros(cCtl.capJ-2, 1)) + (zeros(cCtl.capJ-2, 1)~eye(cCtl.capJ-2));
+    cORDERED.C  = zeros(cCtl.capJ-2, cols(X_struct)-1)~c;
+    cORDERED.D  = zeros(rows(cORDERED.C), 1);
+    
+    cORDERED.CovParType 	= 1;
+    cORDERED.useThreads		= 1;
+    cORDERED.Algorithm 		= 4;
+    cORDERED.hessMethod		= 1;
+    
+    if cCtl.tol ne -1;
+        cORDERED.DirTol = cCtl.tol;
+    endif;
+    
+    if cCtl.print_it eq 1;
+        cORDERED.printIters = 1;
+        cORDERED.GradCheck	= 1;
+    else;
+        cORDERED.printIters = 0;
+    endif;
+    
+    retp(pOrdered, dOrdered, cOrdered);
+endp;
+
+proc (5) = _getHOPITStartValues(struct chopitControl cCtl, ols_b, start_HOP, kx_struct);
+    local beta_Y, V_cons, sig_V_inv, gama0, gama, gama_temp;
+    
+    if rows(start_HOP) eq 1;
+        
+        beta_Y  		= OLS_B[., 1];
+        
+        V_cons		= rndn(cCtl.kv, 1) ./ 100;
+        sig_V_inv	= 1;
+        
+        if cCtl.exp_mu eq 1;
+            
+            gama0       = (rndn(cCtl.kx_mu-1, 1) ./ 100);
+            gama		= (rndn(cCtl.kx_mu, cCtl.capJ-2) ./ 100);
+            gama	    = gama';
+            
+        elseif cCtl.exp_mu eq 0;
+            
+            gama = rndn(cCtl.kx_mu, 1) ./ 10;
+            gama[1, 1] = 0;
+            
+            for j (2, cCtl.capJ-1, 1);
+                
+                gama_temp	= gama[., j-1] + (rndu(cCtl.kx_mu, 1) ./ 10);
+                gama 		= gama~gama_temp;
+                
+            endfor;
+            
+            gama	    = gama';
+            gama0       = gama[1, 2:cols(gama)]';
+            gama        = gama[2:rows(gama), .];
+            
+        endif;
+        
+    else;
+        
+        beta_Y  	= start_HOP[1:kx_struct];
+        V_cons		= start_HOP[kx_struct+1:kx_struct+cCtl.kv];
+        gama0       = start_HOP[kx_struct+cCtl.kv+1:kx_struct+cCtl.kv+cCtl.kx_mu-1];
+        gama		= start_HOP[kx_struct+cCtl.kv+cCtl.kx_mu:kx_struct+cCtl.kv+cCtl.kx_mu-1+(cCtl.kx_mu*(cCtl.capJ-2))];
+        gama		= reshape(gama, cCtl.capJ-2, cCtl.kx_mu);
+        
+        if cCtl.sig_restrict eq 0;
+            sig_V_inv	= start_HOP[kx_struct+cCtl.kv+cCtl.kx_mu-1+(cCtl.kx_mu*(cCtl.capJ-2))+1];
+        endif;
+        
+    endif;
+    
+    retp( gama, gama0, beta_Y, sig_V_inv, V_cons );
+endp;
+
+proc (4) = _getHOPITCMLStructures(struct chopitControl cCtl, struct Vstruct vCtl, beta_Y, gama, gama0, V_cons, sig_V_inv, d_ij, X_struct, X_mu);
+    local k_HOPIT;
+    
+    struct PV pHOPIT;
+    pHOPIT 	= pvCreate;
+    pHOPIT 	= pvPack(pHOPIT, beta_Y, "beta_Y");
+    pHOPIT 	= pvPack(pHOPIT, V_cons, "V_cons");
+    pHOPIT 	= pvPack(pHOPIT, gama0, "gama0");
+    pHOPIT 	= pvPack(pHOPIT, gama, "gama");
+    
+    if cCtl.sig_restrict eq 0;
+        
+        pHOPIT 	= pvPack(pHOPIT, sig_V_inv, "sig_V_inv");
+        k_HOPIT	= rows(vec(beta_Y)) + rows(vec(V_cons)) + rows(vec(gama0)) + rows(vec(gama)) + rows(vec(sig_V_inv));
+        
+    else;
+        
+        k_HOPIT	= rows(vec(beta_Y)) + rows(vec(V_cons)) + rows(vec(gama0)) + rows(vec(gama));
+        
+    endif;
+    
+    struct DS dHOPIT;
+    if cCtl.kv eq 1;
+        
+        dHOPIT = reshape(dsCreate, 4, 1);
+        dHOPIT[1].DataMatrix = d_ij;
+        dHOPIT[2].DataMatrix = X_struct;
+        dHOPIT[3].DataMatrix = X_mu;
+        dHOPIT[4].DataMatrix = vCtl.V_ij1;
+        
+    elseif cCtl.kv eq 2;
+        
+        dHOPIT = reshape(dsCreate, 5, 1);
+        dHOPIT[1].DataMatrix = d_ij;
+        dHOPIT[2].DataMatrix = X_struct;
+        dHOPIT[3].DataMatrix = X_mu;
+        dHOPIT[4].DataMatrix = vCtl.V_ij1;
+        dHOPIT[5].DataMatrix = vCtl.V_ij2;
+        
+        
+    elseif cCtl.kv eq 3;
+        
+        dHOPIT = reshape(dsCreate, 6, 1);
+        dHOPIT[1].DataMatrix = d_ij;
+        dHOPIT[2].DataMatrix = X_struct;
+        dHOPIT[3].DataMatrix = X_mu;
+        dHOPIT[4].DataMatrix = vCtl.V_ij1;
+        dHOPIT[5].DataMatrix = vCtl.V_ij2;
+        dHOPIT[6].DataMatrix = vCtl.V_ij3;
+        
+    endif;
+    
+    struct cmlmtControl cHOPIT;
+    cHOPIT          = cmlmtControlCreate;
+    cHOPIT.title    = "HOPIT Ordered Probit Model";
+    if cCtl.sig_restrict eq 0;
+        cHOPIT.Bounds   = ((ones(k_HOPIT-1, 1) .* -10000)~(ones(k_HOPIT-1,1) .* 10000))|(0.00001~10);
+    endif;
+    cHOPIT.useThreads	= 1;
+    
+    // Set max iterations based on model size
+    if cCtl.kv eq 1;
+        CHOPIT.MaxIters		= 1000;
+    elseif cCtl.kv eq 2;
+        CHOPIT.MaxIters		= 2000;
+    elseif cCtl.kv eq 3;
+        CHOPIT.MaxIters		= 3000;
+    endif;
+    
+    if cCtl.tol ne -1;
+        cHOPIT.DirTol = cCtl.tol;
+    endif;
+    
+    if cCtl.print_it eq 1;
+        
+        cHOPIT.printIters 	= 1;
+        cHOPIT.GradCheck	= 1;
+        
+    else;
+        
+        cHOPIT.printIters = 0;
+        
+    endif;
+    
+    retp(pHOPIT, dHOPIT, cHOPIT, k_HOPIT);
+endp;
+
+proc (2) = _checkVHOPIT(struct cmlmtResults HOPIT_OUT, V_HOPIT);
+    local HOPIT_fail;
+    
+    HOPIT_fail = 0;
+    if ismiss(V_HOPIT);
+        
+        HOPIT_fail  = 1;
+        
+        if det(HOPIT_out.xproduct) gt 0;
+            
+            V_HOPIT = eye(rows(HOPIT_out.xproduct))/HOPIT_out.xproduct;
+            
+        else;
+            
+            V_HOPIT     = 1;
+            V_HOPIT     = miss(V_HOPIT,1);
+            HOPIT_fail  = 1;
+            
+        endif;
+        
+    endif;
+    retp(V_HOPIT, HOPIT_fail);
+endp;

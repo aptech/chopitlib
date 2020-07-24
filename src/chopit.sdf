@@ -1,0 +1,89 @@
+struct chopitOut {
+
+matrix ols_b;
+
+matrix op_b;
+
+matrix me_op;
+
+matrix me_op_se;
+
+matrix v_op;
+
+matrix l_op;
+
+matrix ic_op;
+
+matrix pord_p;
+
+matrix y_star_op;
+
+matrix hopit_b;
+
+matrix me_hopit;
+
+matrix me_hopitse;
+
+matrix v_hopit;
+
+matrix l_hopit;
+
+matrix ic_hopit;
+
+matrix p_hopit;
+
+matrix y_star_hopit;
+
+matrix ic_all;
+
+matrix ic_hopits;
+
+matrix lm_test;
+
+matrix phat;
+
+};
+
+struct chopitControl {
+
+// Variable names
+string array v_varnames;
+string array y_varnames;
+string array x_varnames;
+
+// User facing control parameters
+scalar exp_mu;
+scalar check_con;
+scalar cond_Y_N;
+scalar print_it;
+scalar tol;
+scalar sig_restrict;
+scalar start_OP;
+scalar start_HOP;
+scalar kv;
+string model;
+
+// Internal parameters
+scalar mtype;
+scalar kx_all;
+scalar kx_struct;
+scalar kx_mu;
+
+scalar capJ;
+scalar N;
+
+};
+
+struct Vstruct {
+
+matrix v_ij1;
+
+matrix v_ij2;
+
+matrix v_ij3;
+
+matrix v_ij4;
+
+matrix v_ij5;
+
+};
