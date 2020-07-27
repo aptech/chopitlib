@@ -55,7 +55,6 @@ cCtl.start_HOP = 0;
 // HOPIT  = estimates the CHOPIT vignettes models
 cCtl.model = "HOPIT";
 
-
 // Set up variable names 
 // for data groups
 cCtl.v_varnames = "v1pain";

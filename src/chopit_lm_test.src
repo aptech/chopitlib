@@ -1186,6 +1186,8 @@ proc (1) = CHOPITS_LM(dset_V, dset, struct chopitControl cCtl);
     cOut.ols_b = ols_b;
     cOut.op_b = op_b;
     cOut.me_op = me_op;
+    cOut.me_op_se = me_OPse;
+    
   //  cOut.me_op_se = me_op_se;
     cOut.v_op = v_op;
     cOut.l_op = l_op;
@@ -1194,7 +1196,7 @@ proc (1) = CHOPITS_LM(dset_V, dset, struct chopitControl cCtl);
     cOut.y_star_op = y_star_OP;
     cOut.hopit_b = hoPIT_B;
     cOut.me_hopit = me_HOPIT;
-    cOut.me_hopitse = me_HOPITse;
+    cOut.me_hopit_se = me_HOPITse;
     cOut.v_hopit = v_hOPIT;
     cOut.l_hopit = l_HOPIT;
     cOut.ic_hopit = ic_HOPIT;
@@ -1204,6 +1206,9 @@ proc (1) = CHOPITS_LM(dset_V, dset, struct chopitControl cCtl);
     cOut.ic_hopits = ic_HOPITS;
     cOut.lm_test = lm_test;
     cOut.phat = phat;
+    
+    printChopit(dset, cCtl, cOut);
+    
     retp(cOut);
 endp;
 
