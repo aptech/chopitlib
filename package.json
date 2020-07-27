@@ -1,0 +1,21 @@
+{
+    "author": "Harris et al.",
+    "deps": [
+    ],
+    "description": "The GAUSS chopitlib is contains code for estimating the chopit model as reported in the paper.",
+    "dlib": [
+    ],
+    "keywords": [
+    ],
+    "license": "Non-Commercial",
+    "name": "chopitlib",
+    "repo": "",
+    "src": [
+        "chopit.sdf",
+        "chopit.src",
+        "chopit_lm_test.src",
+        "chopitutil.src"
+       
+    ],
+    "version": "0.0.1"
+}
