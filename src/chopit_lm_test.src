@@ -3,7 +3,7 @@
 
 /* spline_RP_OP_MT.PRC: RANDOM PARAMETERS OP SPLINE MODEL */
 
-proc (1) = CHOPITS_LM(dset_V, dset, struct chopitControl cCtl);
+proc (1) = CHOPITS_LM(dset, struct chopitControl cCtl);
     local y, yVX, V, X, X_struct, X_mu, X_inf, n, mtype, capJ;
     local y_star_OP, y_star_HOPIT;
     local OLS_B, OP_B, me_OP, me_OPse, V_OP, L_OP, IC_OP,
