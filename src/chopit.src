@@ -4,10 +4,12 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
     local mu, gama, gama_all, gama_se, gama_t, OP_vars, me_lab, se_lab;
     
     // Ceate output file
-    if cCtl.exp_mu == 1;
-        output file = "Perachi_J4_ammended_exp_V3.out" reset;
-    else;
-        output file = "Perachi_J4_linear_exp.out" reset;
+    if cCtl.output_file;
+        if cCtl.exp_mu == 1;
+            output file = "Perachi_J4_ammended_exp_V3.out" reset;
+        else;
+            output file = "Perachi_J4_linear_exp.out" reset;
+        endif;
     endif;
     
     output on;

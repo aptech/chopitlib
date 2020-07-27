@@ -60,7 +60,7 @@ scalar tol;
 scalar sig_restrict;
 scalar start_OP;
 scalar start_HOP;
-scalar kv;
+scalar output_file;
 string model;
 
 // Internal parameters
@@ -68,6 +68,7 @@ scalar mtype;
 scalar kx_all;
 scalar kx_struct;
 scalar kx_mu;
+scalar kv;
 
 scalar capJ;
 scalar N;
