@@ -270,8 +270,8 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
         sprintf("%12s  %9s",  "Coeff.", me_lab');
         
         for i(1, cCtl.kx_struct, 1);
-            sprintf("%12s  %9.6f",  cCtl.x_varnames[i], cOut.ME_HOPIT[i, .]);
-            sprintf("%12s  %9.6f", "", cOut.ME_HOPIT_se[i, .]);  
+            sprintf("%12s  %12.6f",  cCtl.x_varnames[i], cOut.ME_HOPIT[i, .]);
+            sprintf("%12s  %12.6f", "", cOut.ME_HOPIT_se[i, .]);  
         endfor;
         
         #else;
