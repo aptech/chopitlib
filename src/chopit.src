@@ -1,7 +1,7 @@
 #include chopit.sdf;
 
 proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
-    local mu, gama, gama_all, gama_se, gama_t, OP_vars, indx, bnd_vnames;
+    local mu, gama, gama_all, gama_se, gama_t, OP_vars, me_lab, se_lab;
     
     // Ceate output file
     if cCtl.exp_mu == 1;
@@ -122,7 +122,7 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
         "ESTIMATED PARAMETERS";
         print;
         sprintf("%12s  %9s  (%4s)  %8s",  "", "Coeff.", "S.E.", "Tstat");
-        sprintf("%12s  %9.4f  (%3.4f)  %8.4f",  OP_vars, cOut.OP_B[., 1], cOut.OP_B[., 2], cOut.OP_B[., 3]);
+        sprintf("%12s  %9.6f  (%3.6f)  %8.6f",  OP_vars, cOut.OP_B[., 1], cOut.OP_B[., 2], cOut.OP_B[., 3]);
     #else;
         print;
             "ESTIMATED PARAMETERS: COEFFICIENT S.E. T-STAT";
@@ -132,17 +132,19 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
         endfor;
         print;
     #endif;
- 
-    
+        me_lab = "ME_" $+ ntos(seqa(1, 1, cCtl.capJ));
+        se_lab = "SE_" $+ ntos(seqa(1, 1, cCtl.capJ));
+        
     #ifminkernelversion(20)
         print;
-        "ESTIMATED PARTIAL EFFECTS (j=1,...,J;)";
+        "ESTIMATED PARTIAL EFFECTS (j=1,...,J; standard errors underneath)";
         print;
-        sprintf("%12s  %9s",  "Coeff.", "ME");
-        sprintf("%12s  %9s",  " ", "SE");
+        
+        sprintf("%12s  %9s",  "Coeff.", me_lab');
+
         for i(1, cCtl.kx_struct-1, 1);
-            sprintf("%12s  %9.4f",  OP_vars[i], cOut.ME_OP[i, .]);
-            sprintf("%12s  %9.4f", "", cOut.ME_OP_se[i, .]);  
+            sprintf("%12s  %9.6f",  OP_vars[i], cOut.ME_OP[i, .]);
+            sprintf("%12s  %9.6f", "", cOut.ME_OP_se[i, .]);  
         endfor;
     #else;
         print;
@@ -189,7 +191,7 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
             "ESTIMATED PARAMETERS";
             print;
             sprintf("%12s  %9s  (%4s)  %8s",  "", "Coeff.", "S.E.", "Tstat");
-            sprintf("%12s  %9.4f  (%3.4f)  %8.4f",  cCtl.x_varnames[1:cCtl.kx_struct], cOut.HOPIT_B[1:cCtl.kx_struct, 1], cOut.HOPIT_B[1:cCtl.kx_struct, 2], cOut.HOPIT_B[1:cCtl.kx_struct, 3]);
+            sprintf("%12s  %9.6f  (%3.6f)  %8.6f",  cCtl.x_varnames[1:cCtl.kx_struct], cOut.HOPIT_B[1:cCtl.kx_struct, 1], cOut.HOPIT_B[1:cCtl.kx_struct, 2], cOut.HOPIT_B[1:cCtl.kx_struct, 3]);
         #else;
             print;
             "ESTIMATED PARAMETERS: COEFFICIENT S.E. T-STAT";
@@ -209,7 +211,7 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
             "Vignettes constants";
             print;
             sprintf("%12s  %9s  (%4s)  %8s",  "", "Coeff.", "S.E.", "Tstat");
-            sprintf("%12s  %9.4f  (%3.4f)  %8.4f",  cCtl.v_varnames, cOut.HOPIT_B[cCtl.kx_struct+1:cCtl.kx_Struct+cCtl.kv, 1], cOut.HOPIT_B[cCtl.kx_struct+1:cCtl.kx_Struct+cCtl.kv, 2], cOut.HOPIT_B[cCtl.kx_struct+1:cCtl.kx_Struct+cCtl.kv, 3]);
+            sprintf("%12s  %9.6f  (%3.6f)  %8.6f",  cCtl.v_varnames, cOut.HOPIT_B[cCtl.kx_struct+1:cCtl.kx_Struct+cCtl.kv, 1], cOut.HOPIT_B[cCtl.kx_struct+1:cCtl.kx_Struct+cCtl.kv, 2], cOut.HOPIT_B[cCtl.kx_struct+1:cCtl.kx_Struct+cCtl.kv, 3]);
         #else;
             "Vignettes constants";
             print;
@@ -227,7 +229,7 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
             print;
             sprintf("%12s  %9s",  "", "Gama");
             for j (1, cCtl.capJ-1, 1);
-                sprintf("%12s  %9.4f", cCtl.x_varnames[1:cCtl.kx_mu], gama_all[(j-1)*cCtl.kx_mu+1:j*cCtl.kx_mu,.]);
+                sprintf("%12s  %9.6f", cCtl.x_varnames[1:cCtl.kx_mu], gama_all[(j-1)*cCtl.kx_mu+1:j*cCtl.kx_mu,.]);
             endfor; 
             print;
         #else;
@@ -245,6 +247,7 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
             
         endfor;
         #endif;
+        
         if rows(cOut.HOPIT_B) gt cCtl.kx_struct+cCtl.kv+((cCtl.capJ-1)*cCtl.kx_mu);
             
             "	 1/V(sd)";;
@@ -252,14 +255,25 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
             print;
             
         endif;
+                
+        cOut.ME_HOPIT	= delif(cOut.ME_HOPIT, cOut.ME_HOPIT[., 1] .eq 1);
+        cOut.ME_HOPIT_se 	= delif(cOut.ME_HOPIT_se, cOut.ME_HOPIT_se[., 1] .eq 1);
         
         print;
         "ESTIMATED PARTIAL EFFECTS (j=1,...,J; standard errors underneath)";
         print;
         
-        cOut.ME_HOPIT	= delif(cOut.ME_HOPIT, cOut.ME_HOPIT[., 1] .eq 1);
-        cOut.ME_HOPIT_se 	= delif(cOut.ME_HOPIT_se, cOut.ME_HOPIT_se[., 1] .eq 1);
+        #ifminkernelversion(20)
+       
+        sprintf("%12s  %9s",  "Coeff.", me_lab');
         
+        for i(1, cCtl.kx_struct, 1);
+            sprintf("%12s  %9.6f",  cCtl.x_varnames[i], cOut.ME_HOPIT[i, .]);
+            sprintf("%12s  %9.6f", "", cOut.ME_HOPIT_se[i, .]);  
+        endfor;
+        
+        #else;
+
         for i (1, cCtl.kx_struct, 1);
             cCtl.x_varnames[i];;
             cOut.ME_HOPIT[i, .];
@@ -267,6 +281,7 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
             cOut.ME_HOPIT_se[i, .];
         endfor;
         print;
+        #endif;
         
     endif;
 endp;
