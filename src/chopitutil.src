@@ -1,4 +1,6 @@
 #include chopit.sdf;
+#include cmlmt.sdf;
+
 proc (3) = _getindicatorVariable(y, capJ, kv, V, N);
     local V1, V2, V3, V4, V5,
         d_ij, v_ij1, v_ij2, v_ij3, v_ij4, v_ij5,
