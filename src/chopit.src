@@ -1,7 +1,7 @@
 #include chopit.sdf;
 
 proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
-    local mu, gama, gama_all, gama_se, gama_t, OP_vars, indx;
+    local mu, gama, gama_all, gama_se, gama_t, OP_vars, indx, bnd_vnames;
     
     // Ceate output file
     if cCtl.exp_mu == 1;
@@ -222,18 +222,14 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
         #endif;
         
         #ifminkernelversion(20)
-            indx = {};
-            for j (1, cCtl.capJ-1, 1);
-                for i (1, cCtl.kx_mu, 1);
-                    indx = indx~(((j-1)*cCtl.kx_mu)+i);
-                endfor;
-            endfor;
-            
             print;
             "Boundary equations (j=0,...,J)";
             print;
             sprintf("%12s  %9s",  "", "Gama");
-            sprintf("%12s  %9.4f",  cCtl.x_varnames[1:cCtl.kx_mu], gama_all[indx,.]);
+            for j (1, cCtl.capJ-1, 1);
+                sprintf("%12s  %9.4f", cCtl.x_varnames[1:cCtl.kx_mu], gama_all[(j-1)*cCtl.kx_mu+1:j*cCtl.kx_mu,.]);
+            endfor; 
+            print;
         #else;
             
         "Boundary equations (j=0,...,J)";
