@@ -98,7 +98,7 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
     
     #ifminkernelversion(20)
         // Surround SE format specifier with parentheses
-        sprintf("%12s  %9f", cCtl.x_varnames, cOut.OLS_B);
+        sprintf("%12s  %12f", cCtl.x_varnames, cOut.OLS_B);
     #else;
         for i (1, cCtl.kx_struct, 1);
             cCtl.x_varnames[i];;cOut.OLS_B[i, .];
@@ -123,8 +123,8 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
         print;
         "ESTIMATED PARAMETERS";
         print;
-        sprintf("%12s  %9s  (%4s)  %8s",  "", "Coeff.", "S.E.", "Tstat");
-        sprintf("%12s  %9.6f  (%3.6f)  %8.6f",  OP_vars, cOut.OP_B[., 1], cOut.OP_B[., 2], cOut.OP_B[., 3]);
+        sprintf("%12s  %12s  (%4s)  %8s",  "", "Coeff.", "S.E.", "Tstat");
+        sprintf("%12s  %12.6f  (%3.6f)  %8.6f",  OP_vars, cOut.OP_B[., 1], cOut.OP_B[., 2], cOut.OP_B[., 3]);
     #else;
         print;
             "ESTIMATED PARAMETERS: COEFFICIENT S.E. T-STAT";
@@ -145,8 +145,8 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
         sprintf("%12s  %9s",  "Coeff.", me_lab');
 
         for i(1, cCtl.kx_struct-1, 1);
-            sprintf("%12s  %9.6f",  OP_vars[i], cOut.ME_OP[i, .]);
-            sprintf("%12s  %9.6f", "", cOut.ME_OP_se[i, .]);  
+            sprintf("%12s  %12.6f",  OP_vars[i], cOut.ME_OP[i, .]);
+            sprintf("%12s  %12.6f", "", cOut.ME_OP_se[i, .]);  
         endfor;
     #else;
         print;
@@ -192,8 +192,8 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
             print;
             "ESTIMATED PARAMETERS";
             print;
-            sprintf("%12s  %9s  (%4s)  %8s",  "", "Coeff.", "S.E.", "Tstat");
-            sprintf("%12s  %9.6f  (%3.6f)  %8.6f",  cCtl.x_varnames[1:cCtl.kx_struct], cOut.HOPIT_B[1:cCtl.kx_struct, 1], cOut.HOPIT_B[1:cCtl.kx_struct, 2], cOut.HOPIT_B[1:cCtl.kx_struct, 3]);
+            sprintf("%12s  %12s  (%4s)  %8s",  "", "Coeff.", "S.E.", "Tstat");
+            sprintf("%12s  %12.6f  (%3.6f)  %8.6f",  cCtl.x_varnames[1:cCtl.kx_struct], cOut.HOPIT_B[1:cCtl.kx_struct, 1], cOut.HOPIT_B[1:cCtl.kx_struct, 2], cOut.HOPIT_B[1:cCtl.kx_struct, 3]);
         #else;
             print;
             "ESTIMATED PARAMETERS: COEFFICIENT S.E. T-STAT";
@@ -212,8 +212,8 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
             print;
             "Vignettes constants";
             print;
-            sprintf("%12s  %9s  (%4s)  %8s",  "", "Coeff.", "S.E.", "Tstat");
-            sprintf("%12s  %9.6f  (%3.6f)  %8.6f",  cCtl.v_varnames, cOut.HOPIT_B[cCtl.kx_struct+1:cCtl.kx_Struct+cCtl.kv, 1], cOut.HOPIT_B[cCtl.kx_struct+1:cCtl.kx_Struct+cCtl.kv, 2], cOut.HOPIT_B[cCtl.kx_struct+1:cCtl.kx_Struct+cCtl.kv, 3]);
+            sprintf("%12s  %12s  (%4s)  %8s",  "", "Coeff.", "S.E.", "Tstat");
+            sprintf("%12s  %12.6f  (%3.6f)  %8.6f",  cCtl.v_varnames, cOut.HOPIT_B[cCtl.kx_struct+1:cCtl.kx_Struct+cCtl.kv, 1], cOut.HOPIT_B[cCtl.kx_struct+1:cCtl.kx_Struct+cCtl.kv, 2], cOut.HOPIT_B[cCtl.kx_struct+1:cCtl.kx_Struct+cCtl.kv, 3]);
         #else;
             "Vignettes constants";
             print;
@@ -267,7 +267,7 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
         
         #ifminkernelversion(20)
        
-        sprintf("%12s  %9s",  "Coeff.", me_lab');
+        sprintf("%12s  %12s",  "Coeff.", me_lab');
         
         for i(1, cCtl.kx_struct, 1);
             sprintf("%12s  %12.6f",  cCtl.x_varnames[i], cOut.ME_HOPIT[i, .]);
