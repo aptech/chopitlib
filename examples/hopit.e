@@ -12,6 +12,7 @@ dstatmt(fname);
 ** running the CHOPIT model
 */
 struct chopitControl cCtl;
+cCtl = chopitControlCreate();
 
 // Set up thresholds using exp_mu
 //     0       for linear ones   
@@ -57,10 +58,10 @@ cCtl.model = "HOPIT";
 
 // Set up variable names 
 // for data groups
-cCtl.v_varnames = "v1pain";
-cCtl.x_varnames = "Constant"$|"Male"$|"any_cond"$|"grip34_9"$|"educ_ps"$|"age6675"$|"age76";
-cCtl.y_varnames = "pain";
+v_formula = "v1pain";
+x_formula = "Constant + Male + any_cond + grip34_9 + educ_ps + age6675 + age76";
+y_formula = "pain";
 
 // Call Procedure
 struct chopitOut cOut;
-cOut = CHOPITS_LM(0, fname, cCtl);	
+cOut = CHOPITS_LM(fname, v_formula, y_formula, x_formula, cCtl);	

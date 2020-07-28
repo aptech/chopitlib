@@ -1,5 +1,198 @@
 #include chopit.sdf;
 #include cmlmt.sdf;
+#include dynargs.dec;
+
+proc (1) = _getChopitVarnames(formulastr);
+    retp(strsplit(formulastr, " + ")');
+endp;
+
+proc (1) = chopitControlCreate();
+    
+    struct chopitControl cCtl0;
+    
+    // Set up thresholds using exp_mu
+    //     0       for linear ones
+    //     1       exponential thresholds
+    //             (test only computed ones)
+    cCtl0.exp_mu = 1;
+    
+    // Turn on check for convergence
+    // Use this if you have concerns about
+    // convergence
+    //    0        no check
+    //    1        re-estimate HOPIT model with solved start
+    //             values to check for global convergence
+    cCtl0.check_con = 0;
+    
+    // Condition LM tests
+    // If the test fails to compute, try conditioning
+    // it with a very small number here
+    cCtl0.cond_Y_N = 0;
+    
+    // Printing of iterations
+    //    0        No
+    //    1        Yes
+    cCtl0.print_it = 0;
+    
+    // Set tolerance level
+    // -1 for defaults
+    cCtl0.tol = -1;
+    
+    // Restrict all sigmas
+    cCtl0.sig_restrict = 1;
+    
+    // Enter option start values :
+    // To be taken from the Gauss CMLMT
+    // output screen, in the exact same order
+    cCtl0.start_OP = 0;
+    cCtl0.start_HOP = 0;
+
+    retp(cCtl0);
+endp;
+
+proc (3) = _getChopitDynargs(...);
+    local model, mtype, n_dynargs;
+    
+    struct chopitControl cCtl;
+#ifminkernelversion(20)
+    
+    { model, cCtl } = _getChopitDynargs20(...);
+   
+#else;
+    
+    { model, cCtl } = _getChopitDynargsUnder20(...);
+    
+#endif;
+
+    
+    if upper(model) $=="OP";
+        mtype = 1;
+    elseif upper(model) $== "HOPIT";
+        mtype = 2;
+    endif;
+    
+    retp(model, mtype, cCtl);
+endp;
+
+proc (2) = _getChopitDynargs20(...);
+    local model, inputType, n_dynargs;
+    
+    inputType = dynargsTypes();
+    n_dynargs = dynargsCount();
+    
+    struct chopitControl cCtl;
+    
+    // Check number of dynamic arguments
+    if n_dynargs > 2;
+        errorlog "'chopits_lm': Maximum number of dynamic arguments into chopits_lm is 2";
+        end;
+    endif;
+    
+    // Check type of dynamic arguments
+    if n_dynargs == 2;
+        if inputType[1] == 17;
+            errorlog "'chopits_lm': Control structure must be final optional argument.";
+            end;
+        elseif not inputType[n_dynargs] == 17;
+            errorlog "'chopits_lm': With two optional arguments, final input must be control structure";
+            end;
+        endif;
+    endif;
+    
+    // Get dynamic arguments
+    if n_dynargs==1;
+        
+        if inputType[1] == 17;
+            // Input is control structure
+            cCtl = dynargsGet(1);
+            
+            // Set model to default
+            model = "HOPIT";
+        else;
+            
+            // Input is model
+            model = dynargsGet(1);
+            
+            // Get default control structure
+            cCtl = chopitControlCreate();
+        endif;
+        
+    elseif n_dynargs==2;
+        
+        // Both model and controls structure inputs
+        { model, cCtl } = dynargsGet(1|2);
+        
+    else;
+        
+         // No optional arguments
+         // Set both model and control struct
+         // to defaults
+         model = "HOPIT";
+         cCtl = chopitControlCreate();
+    endif;
+    
+    retp(model, cCtl);
+endp;
+
+proc (2) = _getChopitDynargsUnder20(...);
+   local model, inputType, n_dynargs;
+    
+    inputType = GET_DYNARG_TYPES;
+    n_dynargs = COUNT_DYNARGS;
+    
+    struct chopitControl cCtl;
+    
+    // Check number of dynamic arguments
+    if n_dynargs > 2;
+        errorlog "'chopits_lm': Maximum number of dynamic arguments into chopits_lm is 2";
+        end;
+    endif;
+    
+    // Check type of dynamic arguments
+    if n_dynargs == 2;
+        if inputType[1] == 17;
+            errorlog "'chopits_lm': Control structure must be final optional argument.";
+            end;
+        elseif not inputType[n_dynargs] == 17;
+            errorlog "'chopits_lm': With two optional arguments, final input must be control structure";
+            end;
+        endif;
+    endif;
+    
+    // Get dynamic arguments
+    if n_dynargs==1;
+        
+        if inputType[1] == 17;
+            // Input is control structure
+            cCtl = sysstate(GET_ONE_DYNARG, 1);
+            
+            // Set model to default
+            model = "HOPIT";
+        else;
+            
+            // Input is model
+            model = sysstate(GET_ONE_DYNARG, 1);
+            
+            // Get default control structure
+            cCtl = chopitControlCreate();
+        endif;
+        
+    elseif n_dynargs==2;
+        
+        // Both model and controls structure inputs
+        { model, cCtl } = sysstate(GET_N_DYNARGS, 2);
+        
+    else;
+        
+         // No optional arguments
+         // Set both model and control struct
+         // to defaults
+         model = "HOPIT";
+         cCtl = chopitControlCreate();
+    endif;
+    
+   retp(model, cCtl);
+endp;
 
 proc (3) = _getindicatorVariable(y, capJ, kv, V, N);
     local V1, V2, V3, V4, V5,

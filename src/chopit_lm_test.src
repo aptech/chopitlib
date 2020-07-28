@@ -3,7 +3,7 @@
 
 /* spline_RP_OP_MT.PRC: RANDOM PARAMETERS OP SPLINE MODEL */
 
-proc (1) = CHOPITS_LM(dset, struct chopitControl cCtl);
+proc (1) = CHOPITS_LM(dset, v_formula, y_formula, x_formula, ...);
     local y, yVX, V, X, X_struct, X_mu, X_inf, n, mtype, capJ;
     local y_star_OP, y_star_HOPIT;
     local OLS_B, OP_B, me_OP, me_OPse, V_OP, L_OP, IC_OP,
@@ -20,7 +20,7 @@ proc (1) = CHOPITS_LM(dset, struct chopitControl cCtl);
     local Score_anal_RC, Score_anal_VE, df_RC, bhhh_anal_RC, df_VE, bhhh_anal_VE, V_RC, V_VE, LM_test_RC, LM_test_VE;
     local mu_xbetaV2, p_ijV2, mu_xbetaV3, p_ijV3, chol_bhhh, chol_bhhh_RC, chol_bhhh_VE, V_inv, V_inv_RC, V_inv_VE;
     local condition, cond_bhhh, cond_bhhh_VE, LM_cond, LM_cond_VE, cond_bhhh_RC, LM_cond_RC, V_gamma;
-    local HOPIT_fail, LR_Yes_No, mu0_star, mu1_star, mu2_star, grad_theta_V1, grad_theta_V2, grad_theta_V3, grad_theta;
+    local HOPIT_fail, LR_Yes_No, mu0_star, mu1_star, mu2_star, grad_theta_V1, grad_theta_V2, grad_theta_V3, grad_theta, model;
     
     clearg index0, index1;
 
@@ -30,38 +30,35 @@ proc (1) = CHOPITS_LM(dset, struct chopitControl cCtl);
     LM_test = zeros(3, 3);
     
     // WHICH MODELS?
+    struct chopitControl cCtl;
+    
     // Set model type
-    if upper(cCtl.model) $=="OP";
-        mtype = 1;
-    elseif upper(cCtl.model) $== "HOPIT";
-        mtype = 2;
-    endif;
+    { model, mtype, cCtl } = _getChopitDynargs(...);
+
+    // Get variable names
+    cCtl.v_varnames = _getChopitVarnames(v_formula);
+    cCtl.x_varnames = _getChopitVarnames(x_formula);
+    cCtl.y_varnames = _getChopitVarnames(y_formula);
     
     cCtl.mtype = mtype;
     cCtl.kv = rows(cCtl.v_varnames);
     
-    // READ IN COMPOSITE DATASET SET
-    yVX = packr(loadd(dset));
-    
     // Separate individual data
-    y 	    		= yVX[., 1];
-    X     			= yVX[., 2:cols(yVX)-cCtl.kv];
-    V				= yVX[., cols(yVX)-cCtl.kv+1:cols(yVX)];
-    
+    V = packr(loadd(dset, v_formula));
+    X = packr(loadd(dset, x_formula));
+    y = packr(loadd(dset, y_formula));
+ 
     // Dimensions
     cCtl.kx_all			= cols(X);
     X_struct		= X;
     cCtl.kx_struct       = cols(X_struct);
     X_mu			= X;
     cCtl.kx_mu           = cols(X_mu);
-    
-    //    X_bar_struct	= meanc(X_struct);
-    //    X_bar_mu		= meanc(X_mu);
-    
+
     // Normalize data
-    y       = y - minc(y);
+    y            = y - minc(y);
     cCtl.capJ    = maxc(y) - minc(y) + 1;
-    capJ = cCtl.capJ;
+    capJ         = cCtl.capJ;
     cCtl.N       = rows(y);
     
     if  cCtl.capJ lt 3;
