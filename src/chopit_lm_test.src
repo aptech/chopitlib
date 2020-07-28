@@ -1186,16 +1186,20 @@ proc (1) = CHOPITS_LM(dset, v_formula, y_formula, x_formula, ...);
     cOut.ic_op = ic_op;
     cOut.pord_p = pordp;
     cOut.y_star_op = y_star_OP;
-    cOut.hopit_b = hoPIT_B;
-    cOut.me_hopit = me_HOPIT;
-    cOut.me_hopit_se = me_HOPITse;
-    cOut.v_hopit = v_hOPIT;
-    cOut.l_hopit = l_HOPIT;
-    cOut.ic_hopit = ic_HOPIT;
-    cOut.p_hopit = p_HOPIT;
-    cOut.y_star_hopit = y_star_HOPIT;
+    
+    if cCtl.mtype == 2;
+        cOut.hopit_b = hoPIT_B;
+        cOut.me_hopit = me_HOPIT;
+        cOut.me_hopit_se = me_HOPITse;
+        cOut.v_hopit = v_hOPIT;
+        cOut.l_hopit = l_HOPIT;
+        cOut.ic_hopit = ic_HOPIT;
+        cOut.p_hopit = p_HOPIT;
+        cOut.y_star_hopit = y_star_HOPIT;
+        cOut.ic_hopits = ic_HOPITS;
+    endif;
+    
     cOut.ic_all = ic_ALL;
-    cOut.ic_hopits = ic_HOPITS;
     cOut.lm_test = lm_test;
     cOut.phat = phat;
     
