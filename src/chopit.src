@@ -142,7 +142,7 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
         "ESTIMATED PARTIAL EFFECTS (j=1,...,J; standard errors underneath)";
         print;
         
-        sprintf("%12s  %9s",  "Coeff.", me_lab');
+        sprintf("%12s  %12s",  "Coeff.", me_lab');
 
         for i(1, cCtl.kx_struct-1, 1);
             sprintf("%12s  %12.6f",  OP_vars[i], cOut.ME_OP[i, .]);
