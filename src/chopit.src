@@ -82,7 +82,7 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
   print;
     if cCtl.mtype ge 2;
         "No. of vignettes used";;
-        cCtl.kv;
+        ntos(cCtl.kv, 1);
       print;
         "Vignette names";;
         cCtl.v_varnames;
