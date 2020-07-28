@@ -1166,18 +1166,13 @@ proc (1) = CHOPITS_LM(dset, v_formula, y_formula, x_formula, ...);
         
         /* NEED TO STACK IC'S TO DETERMINE OPTIMAL MODEL: KEEP HOPIT VARIANTS SEPARATE */
         
-        if mtype eq 1;
-        IC_ALL		= IC_OP;
-    endif;
+    IC_ALL		= IC_OP;
     
     if mtype eq 2;
         IC_HOPITS	= IC_HOPIT;
-        IC_ALL		= IC_OP;
+        IC_HOPITS	= seqa(1,1,rows(IC_HOPITS))~IC_HOPITS;
     endif;
-    
-    IC_ALL		= seqa(1,1,rows(IC_ALL))~IC_ALL;
-    IC_HOPITS	= seqa(1,1,rows(IC_HOPITS))~IC_HOPITS;
-    
+
     /* RETURN OUTPUTS */
     struct chopitOut cOut;
     cOut.ols_b = ols_b;
