@@ -2,6 +2,7 @@
 
 proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
     local mu, gama, gama_all, gama_se, gama_t, OP_vars, me_lab, se_lab;
+    local tmp1, tmp2, tmp3;
     
     // Ceate output file
     if cCtl.output_file;
@@ -31,54 +32,75 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
     dstatmt(dset);
     print;
     
-    " No. of vignettes used";;
-    cCtl.kv;
+    "No. of vignettes used ";;
+    ntos(cCtl.kv, 1);
     print;
     
     "Sample Proportions of Y";
-    print;
     cOut.phat;
+    print;
     
     if cCtl.exp_mu eq 1;
-        
-        "LM TEST FOR RC AND VE";
-        "Test, df's and p-value (reject null HOPIT model for large test values and/or small p-value)";
-      print;
-        cOut.LM_test[1, .];
-      print;
-        "LM TEST FOR VE";
-        "Test, df's and p-value (reject null HOPIT model for large test values and/or small p-value)";
-      print;
-        cOut.LM_test[2, .];
-      print;
-        "LM TEST FOR RC";
-        "Test, df's and p-value (reject null HOPIT model for large test values and/or small p-value)";
-      print;
-        cOut.LM_test[3, .];
-        
+        tmp1 = ""$~"Test"$~"D.F."$~"P-value";
+        tmp2 = "RC and VE"$|"VE"$|"RC";
+        "LM TEST (reject null HOPIT model for large test values and/or small p-value";
+         #ifminkernelversion(20)
+            sprintf("%11s", tmp1);
+            sprintf("%10s %10.4f %10.0f %10.4f", tmp2, cOut.LM_test[.,1], cOut.LM_test[.,2], cOut.LM_test[.,3]);
+         #else;
+            tmp1$|(tmp2$~ntos(cOut.LM_test, 4));
+         #endif;
     endif;
     print;
+    
     "AVERAGE PROBABILITIES";
+    #ifminkernelversion(20)
+        if cCtl.mtype eq 1;
+            sprintf("%12s", "OP REGRESSION");
+            sprintf("%12f", meanc(cOut.pord_p));
+        else;
+            sprintf("%12s", "OP"$~"HOPIT");
+            sprintf("%12f", meanc(cOut.pord_p)~meanc(cOut.p_HOPIT));
+        endif;
+        print;
+    #else;
+        if cCtl.mtype eq 1;
+            "OP"$|ntos(meanc(cOut.pord_p), 4);
+            meanc(cOut.pord_p);
+        elseif cCtl.mtype eq 2;
+            tmp1 = "OP"$~"HOPIT";
+            tmp2 = meanc(cOut.pord_p)~meanc(cOut.p_HOPIT);
+            tmp1$|ntos(tmp2, 4);
+        endif;
+        print;
+    #endif;
 
-    if cCtl.mtype eq 1;
-        meanc(cOut.pord_p);
-    elseif cCtl.mtype eq 2;
-        meanc(cOut.pord_p)~meanc(cOut.p_HOPIT);
-    endif;
-    print;
-    
-    "SUMMARIES OF INFORMATION CRITERIA (BIC, AIC, CAIC, HQIC)";
-  print;
-    format 15,8;
-    "OP REGRESION";
-    miss(cOut.IC_OP, 1000000);
-  print;
-    if cCtl.mtype ge 2;
-        "HOPIT";
-        miss(cOut.IC_HOPIT, 1000000);
-      print;
-    endif;
-    
+    "SUMMARIES OF INFORMATION CRITERIA";
+    tmp1 = "BIC"$~"AIC"$~"CAIC"$~"HQIC"; 
+    tmp2 = ""$~"BIC"$~"AIC"$~"CAIC"$~"HQIC";
+    tmp3 = miss(cOut.IC_OP, 1000000)| miss(cOut.IC_HOPIT, 1000000);
+            
+    #ifminkernelversion(20)
+        if cCtl.mtype eq 1;
+            sprintf("%12s", tmp1);
+            sprintf("%12.2f", miss(cOut.IC_OP, 1000000));
+        else;
+            sprintf("%12s", tmp2);
+            sprintf("%12s %12.2f", "OP"$|"HOPIT", tmp3);
+        endif;
+        print;
+    #else;    
+        
+        print;
+        if cCtl.mtype eq 1;
+            "OP REGRESION";
+            tmp1$|ntos(miss(cOut.IC_OP, 1000000), 6);
+        elseif cCtl.mtype eq 2;
+            print;
+            tmp2$|(("OP"$|"HOPIT")$~ntos(tmp3, 6));
+            print;
+        endif;
+    #endif;
   print;
     if cCtl.mtype ge 2;
         "No. of vignettes used";;
@@ -123,7 +145,7 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
         print;
         "ESTIMATED PARAMETERS";
         print;
-        sprintf("%12s  %12s  (%4s)  %8s",  "", "Coeff.", "S.E.", "Tstat");
+        sprintf("%12s  %12s  (%8s)  %8s",  "", "Coeff.", "S.E.", "Tstat");
         sprintf("%12s  %12.6f  (%3.6f)  %8.6f",  OP_vars, cOut.OP_B[., 1], cOut.OP_B[., 2], cOut.OP_B[., 3]);
     #else;
         print;
@@ -192,7 +214,7 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
             print;
             "ESTIMATED PARAMETERS";
             print;
-            sprintf("%12s  %12s  (%4s)  %8s",  "", "Coeff.", "S.E.", "Tstat");
+            sprintf("%12s  %12s  (%8s)  %8s",  "", "Coeff.", "S.E.", "Tstat");
             sprintf("%12s  %12.6f  (%3.6f)  %8.6f",  cCtl.x_varnames[1:cCtl.kx_struct], cOut.HOPIT_B[1:cCtl.kx_struct, 1], cOut.HOPIT_B[1:cCtl.kx_struct, 2], cOut.HOPIT_B[1:cCtl.kx_struct, 3]);
         #else;
             print;
@@ -212,7 +234,7 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
             print;
             "Vignettes constants";
             print;
-            sprintf("%12s  %12s  (%4s)  %8s",  "", "Coeff.", "S.E.", "Tstat");
+            sprintf("%12s  %12s  (%8s)  %8s",  "", "Coeff.", "S.E.", "Tstat");
             sprintf("%12s  %12.6f  (%3.6f)  %8.6f",  cCtl.v_varnames, cOut.HOPIT_B[cCtl.kx_struct+1:cCtl.kx_Struct+cCtl.kv, 1], cOut.HOPIT_B[cCtl.kx_struct+1:cCtl.kx_Struct+cCtl.kv, 2], cOut.HOPIT_B[cCtl.kx_struct+1:cCtl.kx_Struct+cCtl.kv, 3]);
         #else;
             "Vignettes constants";

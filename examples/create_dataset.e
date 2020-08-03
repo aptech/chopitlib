@@ -42,12 +42,6 @@ kv = cols(v);
 // Remove missing values
 dataset = packr(y~X~V);
 
-// Extract individual variables
-y = dataset[., 1];
-x_all = dataset[., 2:cols(dataset)-kv];
-V = dataset[., cols(dataset)-kv+1:cols(dataset)];
-N = rows(y);
-
 // Variable names
 X_vars  = "Constant"$|"Male"$|"Any_cond"$|"Grip34_9"$|"Educ_ps"$|"Age6675"$|"Age76";
 V_vars = "V1pain";
