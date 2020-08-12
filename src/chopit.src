@@ -6,7 +6,7 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
     
     // Ceate output file
     if cCtl.output_file;
-        if cCtl.exp_mu == 1;
+        if cCtl.exp_mu ge 1;
             output file = "Perachi_J4_ammended_exp_V3.out" reset;
         else;
             output file = "Perachi_J4_linear_exp.out" reset;
@@ -22,7 +22,7 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
     datestring(0);
     print;
     
-    if cCtl.exp_mu == 1;
+    if cCtl.exp_mu == 0;
         "LINEAR THRESHOLDS FOR HOPIT VARIANTS";
     else;
         "EXPONENTIAL THRESHOLDS FOR HOPIT VARIANTS";
