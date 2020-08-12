@@ -40,7 +40,7 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
     cOut.phat;
     print;
     
-    if cCtl.exp_mu eq 1;
+    if cCtl.exp_mu ge 1;
         tmp1 = ""$~"Test"$~"D.F."$~"P-value";
         tmp2 = "RC and VE"$|"VE"$|"RC";
         "LM TEST (reject null HOPIT model for large test values and/or small p-value";
