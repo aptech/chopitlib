@@ -353,7 +353,7 @@ proc (5) = _getHOPITStartValues(struct chopitControl cCtl, ols_b, start_HOP, kx_
         V_cons		= rndn(cCtl.kv, 1) ./ 100;
         sig_V_inv	= 1;
         
-        if cCtl.exp_mu eq 1;
+        if cCtl.exp_mu ge 1;
             
             gama0       = (rndn(cCtl.kx_mu-1, 1) ./ 100);
             gama		= (rndn(cCtl.kx_mu, cCtl.capJ-2) ./ 100);

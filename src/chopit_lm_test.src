@@ -1459,7 +1459,7 @@ proc HOPIT_MLE(struct PV p, struct DS d, struct Vstruct Vctl, exp_mu, kv, kx_mu,
             grad_V_con      = grad_V_con1~grad_V_con2~grad_V_con3;
         endif;
         
-        if exp_mu eq 1;
+        if exp_mu ge 1;
             
             /* gradient for gamma_1 HOPIT */
             grad_g1		= _grad_g_j(gama[2:kx_mu,1], X_mu[.,2:cols(X_mu)], mu_xbeta, p_ij, d_ij, 1, exp_mu);
@@ -2054,7 +2054,7 @@ proc 1 = HOPIT_p(xbargama, kx_all, kx_struct, kx_mu, kv, exp_mu, capJ, jj);
     
     gama	= reshape(gama, capJ-1, kx_mu)';
     zgama	= X_mu*gama;
-    if exp_mu eq 1;
+    if exp_mu ge 1;
         mu_ij	= _mu_ij(zgama, capJ, exp_mu);
     elseif exp_mu eq 0;
         mu_ij	= zgama;
@@ -2194,7 +2194,7 @@ proc 1 = _grad_g_j(gama, z, mu_xbeta, p_ij, d_ij, sig_V_inv, exp_mu);
     J			= (pdfn(mu_xbeta[.,cols(mu_xbeta)] .* -1)) .* -1;
     j_all		= (j1~j_mid~J) .* sig_V_inv;
     
-    if exp_mu eq 1;
+    if exp_mu ge 1;
         
         j_all		= (j_all .* (exp(z*gama) .*. ones(1,cols(p_ij)))) ./ p_ij;
         grad_g		= sumr(j_all .* d_ij);
