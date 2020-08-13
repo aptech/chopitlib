@@ -3,7 +3,7 @@
 
  ## What is GAUSS?
   [**GAUSS**](www.aptech.com) is an easy-to-use data analysis, mathematical and statistical environment based on the powerful, fast and efficient **GAUSS Matrix Programming Language**. [**GAUSS**](www.aptech.com) is a complete analysis environment with the built-in tools you need for estimation, forecasting, simulation, visualization and more.
- 
+
   ## What is the GAUSS CHOPIT library?
   The [**GAUSS**](www.aptech.com) **CHOPITLIB** library is a collection of [**GAUSS**](www.aptech.com) code developed by [Mark Harris](https://staffportal.curtin.edu.au/staff/profile/view/Mark.Harris/).
 
@@ -17,11 +17,11 @@
   **GAUSS 18+**
   The GAUSS CHOPITLIB library can be easily installed using the [**GAUSS Application Installer**](https://www.aptech.com/support/installation/using-the-applications-installer-wizard/), as shown below:
 
-  1. Download the zipped folder `chopit_0.1.0.zip` from the [CHOPIT Library Release page](https://github.com/aptech/gauss-qardl/releases).
+  1. Download the zipped folder `chopit_0.1.0.zip` from the [CHOPIT Library Release page](https://github.com/aptech/chopitlib/releases).
   2. Select **Tools > Install Application** from the main **GAUSS** menu.  
   ![install wizard](images/install_application.png)  
 
-  3. Follow the installer prompts, making sure to navigate to the downloaded `chopit_0.1.0.zip`.
+  3. Follow the installer prompts, making sure to navigate to the downloaded `chopitlib_0.1.0.zip`.
   4. Before using the functions created by `chopitlib` you will need to load the newly created `chopitlib` library. This can be done in a number of ways:
     *   Navigate to the **Library Tool Window** and click the small wrench located next to the `chopitlib` library. Select `Load Library`.  
     ![load library](images/load_carrionlib.jpg)
