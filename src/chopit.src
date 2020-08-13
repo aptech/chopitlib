@@ -78,7 +78,9 @@ proc (0) = printChopit(dset, struct chopitControl cCtl, struct chopitOut cOut);
     "SUMMARIES OF INFORMATION CRITERIA";
     tmp1 = "BIC"$~"AIC"$~"CAIC"$~"HQIC"; 
     tmp2 = ""$~"BIC"$~"AIC"$~"CAIC"$~"HQIC";
-    tmp3 = miss(cOut.IC_OP, 1000000)| miss(cOut.IC_HOPIT, 1000000);
+    if cCtl.mtype eq 2;    
+        tmp3 = miss(cOut.IC_OP, 1000000)| miss(cOut.IC_HOPIT, 1000000);
+    endif;
             
     #ifminkernelversion(20)
         if cCtl.mtype eq 1;
