@@ -1,5 +1,8 @@
 # chopitlib
- This repository contains the GAUSS CHOPITLIIB library developed by [Mark Harris](https://staffportal.curtin.edu.au/staff/profile/view/Mark.Harris/) and referenced in
+ This repository contains the GAUSS CHOPITLIIB library developed by [Mark Harris](https://staffportal.curtin.edu.au/staff/profile/view/Mark.Harris/).
+
+When using this code, please cite:
+ Greene, W.H., Harris, M.N., Knott, R. and Rice, N., 2020 (forthcoming); Specification and testing of hierarchical ordered response models with anchoring vignettes, *Journal of the Royal Statistical Society*, Series A (accepted 19-Jun-2020).
 
  ## What is GAUSS?
   [**GAUSS**](www.aptech.com) is an easy-to-use data analysis, mathematical and statistical environment based on the powerful, fast and efficient **GAUSS Matrix Programming Language**. [**GAUSS**](www.aptech.com) is a complete analysis environment with the built-in tools you need for estimation, forecasting, simulation, visualization and more.
@@ -8,6 +11,10 @@
   The [**GAUSS**](www.aptech.com) **CHOPITLIB** library is a collection of [**GAUSS**](www.aptech.com) code developed by [Mark Harris](https://staffportal.curtin.edu.au/staff/profile/view/Mark.Harris/).
 
   The chopitlib library implements the Compound Hierarchical Ordered Probit (CHOPIT) model. When used in conjunction with anchoring vignette questions, the CHOPIT model allows researchers to adjust for reporting heterogeneity in self-assessed survey questions.  
+
+  This code:
+  *  Estimates the CHOPIT model with anchoring techniques.
+  *  implements a new parametric test for the underlying assumptions of the CHOPIT analysis with vignettes.
 
   ## Getting Started
   ### Installing
@@ -28,9 +35,10 @@
     *  Enter `library chopitlib` in the **Program Input/output Window**.
     *  Put the line `library chopitlib;` at the beginning of your program files.
 
-  >Note: I have provided the individual files found in `chopitlib_0.1.0.zip` for examination and review. However, installation should always be done using the [`chopitlib_0.1.0.zip` from the release page](https://github.com/aptech/gauss-qardl/releases) and the [**GAUSS Application Installer**](https://www.aptech.com/support/installation/using-the-applications-installer-wizard/).
+  >Note: I have provided the individual files found in `chopitlib_0.1.0.zip` for examination and review. However, installation should always be done using the [`chopitlib_0.1.0.zip` from the release page](https://github.com/aptech/chopitlib/releases) and the [**GAUSS Application Installer**](https://www.aptech.com/support/installation/using-the-applications-installer-wizard/).
 
   ## Authors
+  [Mark Harris](mailto:Mark.Harris@curtin.edu.au)
   [Erica Clower](mailto:erica@aptech.com)  
   [Aptech Systems, Inc](https://www.aptech.com/)  
   [![alt text][1.1]][1]
