@@ -14,7 +14,7 @@ When using this code, please cite:
 
   This code:
   *  Estimates the CHOPIT model with anchoring techniques.
-  *  implements a new parametric test for the underlying assumptions of the CHOPIT analysis with vignettes.
+  *  Implements a new parametric test for the underlying assumptions of the CHOPIT analysis with vignettes.
 
   ## Getting Started
   ### Installing
